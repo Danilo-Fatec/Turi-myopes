@@ -64,12 +64,6 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 ### 📖 REQUISITOS DO CLIENTE
 [Clique Aqui]()
 
-### 🖌️ CORES
-[Clique Aqui]()
-
-### BD 
-[Clique Aqui]()
-
 ### 🎨 FIGMA
 [Clique Aqui]()
 
