@@ -79,4 +79,4 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 | Dev     |   João Pedro Souza  |     <a target="_blank" href=""><img src="https://skillicons.dev/icons?i=github"></a>|  
 | Dev     |   André Luis Alves  |     <a target="_blank" href=""><img  src="https://skillicons.dev/icons?i=github"></a>|   
 | Dev     |   Bruno Maria   |     <a target="_blank" href=""><img  src="https://skillicons.dev/icons?i=github"></a>|  
-| Dev     |      |     <a target="_blank" href=""><img  src="https://skillicons.dev/icons?i=github"></a>|  
+| Dev     |  Gustavo    |     <a target="_blank" href=""><img  src="https://skillicons.dev/icons?i=github"></a>|  
