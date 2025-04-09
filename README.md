@@ -15,7 +15,7 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 # 🗂️SPRINTS
 | Sprint | Data de Início | Data de Entrega | Status | Histórico |
 |---------------------|--------------------|---------------------|--------------------|--------------------|  
-|  1  | :calendar:  ➡ (24/03) | 📆 ➡ (17/04) | Em andamento | [Relatório] ( Sprints/Sprint1.md )          
+|  1  | :calendar:  ➡ (24/03) | 📆 ➡ (17/04) | Em andamento | [Relatório](Sprints/Sprint1.md)          
 |  2  | :calendar:  ➡ (22/04) | 📆 ➡ (15/05) | Não iniciado |
 |  3  | :calendar:  ➡ (16/05) | 📆 ➡ (10/06) | Não iniciado |
 
