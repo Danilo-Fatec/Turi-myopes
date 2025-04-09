@@ -15,14 +15,20 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 # 🗂️SPRINTS
 | Sprint | Data de Início | Data de Entrega | Status |
 |---------------------|--------------------|---------------------|--------------------| 
-|  1  | :calendar:  ➡ () | 📆 ➡ () | Não iniciado |           
-|  2  | :calendar:  ➡ () | 📆 ➡ () | Não iniciado |
-|  3  | :calendar:  ➡ () | 📆 ➡ ()| Não iniciado |
+|  1  | :calendar:  ➡ (24/03) | 📆 ➡ (17/04) | Em andamento |           
+|  2  | :calendar:  ➡ (22/04) | 📆 ➡ (15/05) | Não iniciado |
+|  3  | :calendar:  ➡ (16/05) | 📆 ➡ (10/06) | Não iniciado |
 
 |       RESTRIÇÕES DE PROJETO E TECNOLOGIA      |  
 |-----------------------------------------------|
 | - As seguintes restrições devem ser cumpridas no desenvolvimento da aplicação:     
-| 1. 
+| 1. O sistema deve ser prototipado e validado utilizando o Figma;
+| 2. O sistema deve seguir o catálogo de tecnologias do semestre:
+| 3. O servidor deverá ser codificado utilizando Node.js;
+| 4. A interface de usuário deverá ser codificada utilizando React TypeScript;
+| 5. Os dados devem ser armazenados utilizando o SGBD PostgreSQL;
+| 6. Manter a documentação e artefatos de programação em um repositório público do GitHub;
+| 7. Utilizar alguma ferramenta de controle de tarefas (ex.: GitHub Projects, Trello).
 
 ------------------------------------------------------------------------------------
 
