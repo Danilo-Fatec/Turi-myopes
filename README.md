@@ -33,7 +33,7 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 ------------------------------------------------------------------------------------
 
 # 📑PRODUCT BACKLOG
-|  Requisitos Funcionais       |
+|  Requisitos Funcionais       |                              |                              
 |------------------------------|------------------------------|
 | RF01 - Focos de calor por estado | RF10 – Restringir as consultas por intervalo de tempo                          
 | RF02 – Focos de calor por bioma  | RF11 – Quais meses o risco de fogo é maior
