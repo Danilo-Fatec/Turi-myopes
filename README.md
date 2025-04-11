@@ -35,7 +35,7 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 # 📑PRODUCT BACKLOG
 |  Requisitos Funcionais       |
 |------------------------------|
-|    
+| RF01 - Focos de calor por estado    
 
 |   Requisitos Não Funcionais  |                                                                                                                 
 |------------------------------|   
