@@ -73,13 +73,13 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 # 🔗 LINKS
 
 ### 🧮 TRELLO 
-[Clique Aqui](https://trello.com/b/TGmc3l9T/firedod)
+[Clique Aqui](https://trello.com/b/TGmc3l9T/myopes)
 
 ### 📖 REQUISITOS DO CLIENTE
-[Clique Aqui]()
+[Clique Aqui](https://trello.com/c/S0B2EoHk/12-requisitos)
 
 ### 🎨 FIGMA
-[Clique Aqui]()
+[Clique Aqui](https://www.figma.com/design/JZJ1FFENJMPP3n83jAIiWi/SIte--Turi?node-id=160-2&p=f&t=ZbwVj6U7R594W129-0)
 
 ### ATA DE REUNIÃO SCRUM 
 [Clique Aqui]()
