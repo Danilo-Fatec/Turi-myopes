@@ -88,9 +88,9 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 
 |CARGO | NOME| SOCIAL MEDIA |
 |------|-----|:--------------:|
-| P.O (Product Owner) |   Georgia Mantchev   |     <a target="_blank" href="/"><img  src="https://skillicons.dev/icons?i=github"></a>|    
+| P.O (Product Owner) |   Georgia Mantchev   |     <a target="_blank" href="https://github.com/Mantchev13"><img  src="https://skillicons.dev/icons?i=github"></a>|    
 | Scrum Master |   Danilo Alves   |     <a target="_blank" href="https://github.com/Danilo-Fatec"><img  src="https://skillicons.dev/icons?i=github"></a>|  
-| Dev     |   João Pedro Souza  |     <a target="_blank" href=""><img src="https://skillicons.dev/icons?i=github"></a>|  
-| Dev     |   André Luis Alves  |     <a target="_blank" href=""><img  src="https://skillicons.dev/icons?i=github"></a>|   
-| Dev     |   Bruno Maria   |     <a target="_blank" href=""><img  src="https://skillicons.dev/icons?i=github"></a>|  
-| Dev     |  Gustavo    |     <a target="_blank" href=""><img  src="https://skillicons.dev/icons?i=github"></a>|  
+| Dev     |   João Pedro Souza  |     <a target="_blank" href="https://github.com/Shynj0"><img src="https://skillicons.dev/icons?i=github"></a>|  
+| Dev     |   André Luis Alves  |     <a target="_blank" href="https://github.com/andre28122"><img  src="https://skillicons.dev/icons?i=github"></a>|   
+| Dev     |   Bruno Maria   |     <a target="_blank" href="https://github.com/BrunoPrince1"><img  src="https://skillicons.dev/icons?i=github"></a>|  
+| Dev     |  Gustavo    |     <a target="_blank" href="https://github.com/GustavoCastilhoLucena"><img  src="https://skillicons.dev/icons?i=github"></a>|  
