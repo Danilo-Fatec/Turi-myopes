@@ -60,7 +60,7 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 
 # BURNDOWN SP1
  <div align = center>
- <img src="">
+ <img src="Sprints/Imagens Turi/burndown_finalsp1.PNG">
  </div>
 
 -----------------------------------------------------------------------------------
