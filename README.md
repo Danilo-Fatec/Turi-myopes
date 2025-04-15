@@ -12,10 +12,10 @@ O objetivo é especificar e construir um site informativo que tem como objetivo 
 
 -----------------------------------------------------------------------------------
 
-# 🗂️SPRINTS
-| Sprint | Data de Início | Data de Entrega | Status | Histórico |
-|---------------------|--------------------|---------------------|--------------------|--------------------|  
-|  1  | :calendar:  ➡ (24/03) | 📆 ➡ (17/04) | Em andamento | [Relatório](Sprints/Sprint1.md)
+# 🗂️Data
+| Data de Início | Data de Entrega | Status | Histórico |
+|---------------------|--------------------|---------------------|--------------------|  
+| :calendar:  ➡ (24/03) | 📆 ➡ (17/04) | Em andamento | [Relatório](Sprints/Sprint1.md)
 
 |       RESTRIÇÕES DE PROJETO E TECNOLOGIA      |  
 |-----------------------------------------------|
