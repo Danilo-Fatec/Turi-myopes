@@ -1,7 +1,7 @@
 # TURI
 <div align="middle">
 </div>
-<img src='Sprints/Imagens Turi/thumbnail_logo-equipe.png' width='500'/>
+<img src='Imagens Turi/thumbnail_logo-equipe.png' width='500'/>
 <div>
 
 -----------------------------------------------------------------------------------
