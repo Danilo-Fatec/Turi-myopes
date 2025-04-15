@@ -69,12 +69,12 @@ RF11 – Quais meses o risco de fogo é maior                             | Usu�
 RF12 – O risco de fogo está associado a uma maior área queimada        | Usuário | poder monitorar o risco de fogo em áreas maiores| eu possa associar o risco de fogo a uma maior área queimada e tomar decisões mais rápidas e assertivas para minimizar os danos |
 RF13 – Fazer diagrama da UML                                           | Cliente |
 RF13.1 - Caso de uso                                                   | Cliente |  criar um diagrama de caso de uso  | poder representar visualmente as interações entre os usuários (atores) e o sistema, detalhando as funcionalidades principais que o sistema oferece aos usuários e como cada ator interage com essas funcionalidades |
-RF13.2 - Classe                                                        | Cliente |  | |
-RF13.3 - Sequência                                                     | Cliente |  | |
-RF16 – mapa com zoom                                                   | Usuário |  | |
-RF17 – Legendas no mapa                                                | Usuário |  | |
-RF18 – visual responsivo                                               | Usuário |  | |
- RF19 – Logo clicável para que o usuário possa voltar a página inicial | Usuário |  | |
+RF13.2 - Classe                                                        | Cliente | criar um diagrama de classe UML | poder representar as classes do sistema, seus atributos, métodos e os relacionamentos entre elas, de forma a estruturar e organizar o código do sistema de maneira clara e eficiente. |
+RF13.3 - Sequência                                                     | Cliente | Quero: criar um diagrama de sequência UML  | poder representar forma clara, detalhada e funcional da interação e da ordem em que os objetos interagem com o sistema ao longo do tempo, mostrando a sequência de chamadas de métodos e a troca de mensagens entre os elementos envolvidos. |
+RF16 – mapa com zoom                                                   | Usuário | Poder dar zoom no mapa aproximando ou diminuindo a imagem | para melhor visualização do mapa e das informações nele contidas, quando aproximada visualizar as cidades, quando diminuída visualizar estado e país |
+RF17 – Legendas no mapa                                                | Usuário | poder entender as diferentes marcações no mapa | auxiliar o usuário a identificar as marcações contidas no mapa de forma clara e objetiva |
+RF18 – visual responsivo                                               | Usuário | poder acessar a página de diferentes dispositivos, exemplo: tablets, celulares, computadores etc | quando o usuário acesse o site de diferentes dispositivos não afetando sua experiência e navegabilidade |
+RF19 – Logo clicável para que o usuário possa voltar a página inicial  | Usuário | ao momento que clicar no logo que estará no topo da página possa voltar a página inicial | de forma simples e rápida sempre tenha disponível como voltar a página inicial e recomeçar a navegação |
 
 
 
