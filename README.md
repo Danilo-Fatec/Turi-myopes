@@ -47,8 +47,8 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 
 |   Requisitos Não Funcionais  |                                                                                                                 
 |------------------------------|   
-|  
-
+| RNF01 – Exibir os dados espaciais em mapas interativos.
+| RNF02 – Exibir os resultados em gráficos interativos.
 
 -----------------------------------------------------------------------------------
 
