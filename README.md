@@ -7,7 +7,7 @@
 -----------------------------------------------------------------------------------
  
  <h1>DESCRIÇÃO:</h1>    
-O objetivo é especificar e construir uma aplicação web que contenha o mapa da América Latina, e os focos de incendio.
+O objetivo é especificar e construir um site informativo que tem como objetivo facilitar o acesso à informação com dados precisos e atualizados de cada região e bioma. Nossa equipe é formada por seis estudantes apaixonados por tecnologia e pelo que fazem. Utilizamos tecnologias modernas para coletar e apresentar dados de forma clara e interativa.
 </div>
 
 -----------------------------------------------------------------------------------
