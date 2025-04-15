@@ -55,7 +55,28 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 # USER STORIES
 |Requisito               |Ator          |Ação                         |Motivo                        |
 |--------------|-----------------------------|------------------------------|---------------|
-RF01 – Focos de calor por estado | Usuário | Visualizar os estados de forma demarcada | localizar de forma fácil os estados e seus focos de calor |
+RF01 – Focos de calor por estado                                       | Usuário | Visualizar os estados de forma demarcada | localizar de forma fácil os estados e seus focos de calor |
+RF02 – Focos de calor por bioma                                        | Usuário | Visualizar os biomas de forma demarcada | localizar de forma fácil os biomas e seus focos de calor  |
+RF03 – Risco de fogo por estado                                        | Usuário | Visualizar os estados com maior risco de fogo | visualizar de forma fácil os estados com maior risco |
+RF04 – Risco de fogo por bioma                                         | Usuário | Visualizar os biomas com maior risco de fogo | saber os biomas com maior risco |
+RF05 – Área queimada por estado                                        | Usuário | Visualizar as aeras queimadas por estados de forma demarcada | fácil visualização das aeras queimadas separando por estado |
+RF06 – Área queimada por bioma                                         | Usuário | Visualizar a área queimada por bioma de forma demarcada | fácil visualização da área queimada separando por bioma |
+RF07 – Gráficos de focos de calor por estado e bioma                   | Usuário | gráfico que mostre os focos de calor podendo escolher entre bioma e estado | ver de forma fácil e simplificada os focos de calor |
+RF08 – Gráficos de risco de fogo por estado e bioma                    | Usuário | gráfico que mostre o risco de fogo podendo escolher entre bioma e estado | ver de forma fácil e simplificada os riscos de fogo |
+RF09 – Gráficos de área queimada por estado e bioma                    | Usuário | gráfico que mostre os focos de calor podendo escolher entre bioma e estado | ver de forma fácil e simplificada os focos de calor |
+RF10 – Restringir as consultas por intervalo de tempo                  | Usuário | um filtro para poder selecionar um certo período determinado, sendo ele passado, máximo 1 ano atrás | visualizar e poder comparar dados antigos |
+RF11 – Quais meses o risco de fogo é maior                             | Usuário | uma tabela com o comparativo de cada mês em diferentes anos|  para poder fazer uma visualização claro e direta dos diferentes meses de cada ano para comparativo |
+RF12 – O risco de fogo está associado a uma maior área queimada        | Usuário | poder monitorar o risco de fogo em áreas maiores| eu possa associar o risco de fogo a uma maior área queimada e tomar decisões mais rápidas e assertivas para minimizar os danos |
+RF13 – Fazer diagrama da UML                                           | Cliente |
+RF13.1 - Caso de uso                                                   | Cliente |  criar um diagrama de caso de uso  | poder representar visualmente as interações entre os usuários (atores) e o sistema, detalhando as funcionalidades principais que o sistema oferece aos usuários e como cada ator interage com essas funcionalidades |
+RF13.2 - Classe                                                        | Cliente |  | |
+RF13.3 - Sequência                                                     | Cliente |  | |
+RF16 – mapa com zoom                                                   | Usuário |  | |
+RF17 – Legendas no mapa                                                | Usuário |  | |
+RF18 – visual responsivo                                               | Usuário |  | |
+ RF19 – Logo clicável para que o usuário possa voltar a página inicial | Usuário |  | |
+
+
 
 -------------------------------------------------------------------------------------------------
 
