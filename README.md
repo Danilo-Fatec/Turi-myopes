@@ -53,8 +53,9 @@ O objetivo é especificar e construir uma aplicação web que contenha o mapa da
 -----------------------------------------------------------------------------------
 
 # USER STORIES
-|Ator          |Ação                         |Motivo                        |
-|--------------|-----------------------------|------------------------------|
+|Requisito               |Ator          |Ação                         |Motivo                        |
+|--------------|-----------------------------|------------------------------|---------------|
+RF01 – Focos de calor por estado | Usuário | Visualizar os estados de forma demarcada | localizar de forma fácil os estados e seus focos de calor |
 
 -------------------------------------------------------------------------------------------------
 
