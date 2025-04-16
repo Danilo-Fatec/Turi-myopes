@@ -12,10 +12,10 @@ O objetivo é dessa Sprint é começar o conceito do Site e apresentar especific
 
 -----------------------------------------------------------------------------------
 
-# 🗂️SPRINTS
-| Sprint | Data de Início | Data de Entrega |
-|--------------------|---------------------|--------------------| 
-|  1  | :calendar:  ➡ (24/03) | 📆 ➡ (17/04) | Concluído |
+# 🗂️SPRINT
+| Status | Data de Início | Data de Entrega |
+|-------------|------------------------|---------------| 
+|  Concluído  | :calendar:  ➡ (24/03) | 📆 ➡ (17/04) |
 
 |       RESTRIÇÕES DE PROJETO E TECNOLOGIA      |  
 |-----------------------------------------------|
