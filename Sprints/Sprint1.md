@@ -14,7 +14,7 @@ O objetivo é dessa Sprint é começar o conceito do Site e apresentar especific
 
 # 🗂️SPRINTS
 | Sprint | Data de Início | Status |
-|---------------------|--------------------|---------------------|--------------------| 
+|--------------------|---------------------|--------------------| 
 |  1  | :calendar:  ➡ (24/03) | 📆 ➡ (17/04) | Concluído |
 
 |       RESTRIÇÕES DE PROJETO E TECNOLOGIA      |  
