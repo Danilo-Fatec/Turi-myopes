@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Turi - Burned Forest Areas</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body class="bg-gray-100 font-sans min-h-screen flex flex-col">
+    <header class="header">
+      <div class="logo">
+        <img src="./img/unnamed.png" alt="Turi Logo" class="h-10" />
+      </div>
+      <button class="hamburger md:hidden" onclick="toggleMenu()">☰</button>
+      <div class="nav-container hidden md:flex">
+        <nav class="nav">
+          <button onclick="showTab('inicio')" id="btn-inicio" class="nav-btn active">Início</button>
+          <button onclick="showTab('mapa')" id="btn-mapa" class="nav-btn">Mapa</button>
+          <button onclick="showTab('dados')" id="btn-dados" class="nav-btn">Dados</button>
+          <button onclick="showTab('quem')" id="btn-quem" class="nav-btn">Quem Somos</button>
+        </nav>
+      </div>
+    </header>
+    <main class="flex-grow p-6">
+      <section id="inicio" class="tab-content active">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 justify-items-center">
+          <div class="card"><img src="./img/termometro.png" alt="Focos de Calor" class="icon" /><h2 class="card-title">Focos de Calor</h2><p class="card-text">Mapa interativo com áreas com foco de calor - dados dos satélites do INPE</p></div>
+          <div class="card"><img src="./img/queimada.png" alt="Risco de Fogo" class="icon" /><h2 class="card-title">Risco de Fogo</h2><p class="card-text">Mapa interativo com áreas de risco de fogo - dados dos satélites do INPE</p></div>
+          <div class="card"><img src="./img/fogo.png" alt="Áreas Queimadas" class="icon" /><h2 class="card-title">Áreas Queimadas</h2><p class="card-text">Mapa interativo com áreas queimadas - dados dos satélites do INPE</p></div>
+          <div class="card"><img src="./img/grafico.png" alt="Gráficos" class="icon" /><h2 class="card-title">Gráficos</h2><p class="card-text">Gráficos com informações dos dados geográficos ambientais</p></div>
+        </div>
+      </section>
+      <section id="mapa" class="tab-content">
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="bg-gray-200 w-full md:w-64 p-4 shadow-lg rounded-lg">
+            <h3 class="text-xl text-center font-bold mb-2">Filtros</h3>
+            <div class="mb-4">
+              <p class="font-semibold mb-1">Tipo de mapa:</p>
+              <label><input type="radio" name="mapType" value="estado" checked onchange="toggleSelect()"> Estados</label><br/>
+              <label><input type="radio" name="mapType" value="bioma" onchange="toggleSelect()"> Biomas</label>
+            </div>
+            <div class="mb-4">
+              <p class="font-semibold mb-1">Tipo de dados:</p>
+              <label><input type="radio" name="dataType" value="foco" checked> Focos de Calor</label><br/>
+              <label><input type="radio" name="dataType" value="risco"> Riscos de Fogo</label><br/>
+              <label><input type="radio" name="dataType" value="queimada"> Áreas queimadas</label>
+            </div>
+            <select id="estadoSelect" class="p-2 rounded-md border border-gray-300">
+              <option>Estado</option><option>SP</option><option>MG</option><option>PA</option>
+            </select>
+            <select id="cidadeSelect" class="p-2 rounded-md border border-gray-300"><option>Cidade</option></select>
+            <select id="biomaSelect" class="p-2 rounded-md border border-gray-300 hidden"><option>Biomas</option></select>
+            <button class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">Ativar Filtros</button>
+          </div>
+          <div class="w-full">
+            <div id="mapid" class="shadow-lg rounded-xl" style="min-height: 600px;"></div>
+          </div>
+        </div>
+      </section>
+      <section id="dados" class="tab-content">
+        <div class="bg-gray-200 p-6 rounded-xl shadow-md">
+          <h3 class="text-xl font-bold mb-4">Filtros</h3>
+          <div class="flex flex-wrap md:flex-nowrap items-end gap-4">
+            <div>
+              <p class="font-semibold text-sm mb-1">Tipo do mapa:</p>
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1"><input type="radio" name="tipoMapa" checked> Estado</label>
+                <label class="flex items-center gap-1"><input type="radio" name="tipoMapa"> Bioma</label>
+              </div>
+            </div>
+            <div>
+              <p class="font-semibold text-sm mb-1">Tipo de dados:</p>
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1"><input type="radio" name="tipoDado" checked> Focos de Calor</label>
+                <label class="flex items-center gap-1"><input type="radio" name="tipoDado"> Risco de Fogo</label>
+                <label class="flex items-center gap-1"><input type="radio" name="tipoDado"> Áreas Queimadas</label>
+              </div>
+            </div>
+            <div>
+              <label class="text-sm font-semibold">Data Inicial</label>
+              <select class="block p-2 text-sm rounded-md border border-gray-300"><option>Data Inicial</option></select>
+            </div>
+            <div>
+              <label class="text-sm font-semibold">Data Final</label>
+              <select class="block p-2 text-sm rounded-md border border-gray-300"><option>Data Final</option></select>
+            </div>
+            <div>
+              <label class="text-sm font-semibold">Estado / Bioma</label>
+              <select class="block p-2 text-sm rounded-md border border-gray-300"><option>Bioma</option></select>
+            </div>
+            <div class="ml-auto">
+              <button class="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-md">Aplicar Filtros</button>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-center mt-8">
+          <div class="w-full md:w-2/3 text-center">
+            <h2 class="text-xl font-bold mb-4">Média de todos os dados</h2>
+            <canvas id="graficoPizza" class="mx-auto" width="400" height="400"></canvas>
+          </div>
+        </div>
+      </section>
+      <section id="quem" class="tab-content text-center max-w-3xl mx-auto">
+        <h2 class="text-2xl font-bold mb-4">Sobre o Projeto</h2>
+        <p>Este projeto é parte da iniciativa Turi - Burned Forest Areas...</p>
+      </section>
+    </main>
+    <footer class="footer">
+      <div class="flex flex-col items-center gap-2">
+        <p>Projeto TURI © 2025 | Equipe MYOPES</p>
+        <p>Email: mmyopes@gmail.com</p>
+        <div class="flex justify-center gap-4 mt-2">
+          <img src="./img/logo-equipe.png" alt="Turi Burned" class="h-12" />
+          <img src="./img/logo-projeto.png" alt="Myopes" class="h-10" />
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/grafico.js"></script>
+    
+  </body>
+</html>
