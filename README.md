@@ -15,7 +15,7 @@ O objetivo é especificar e construir um site informativo que tem como objetivo 
 # 🗂️Data
 | Data de Início | Data de Entrega | Status | Histórico |
 |---------------------|--------------------|---------------------|--------------------|  
-| :calendar:  ➡ (24/03) | 📆 ➡ (17/04) | Em andamento | [Relatório](Sprints/Sprint1.md)
+| :calendar:  ➡ (24/03) | 📆 ➡ (17/04) | Concluído | [Relatório](Sprints/Sprint1.md)
 
 |       RESTRIÇÕES DE PROJETO E TECNOLOGIA      |  
 |-----------------------------------------------|
