@@ -1,5 +1,5 @@
 # Myopes
-<div align="middle">
+<div align="center">
 </div>
 <img src='Sprints/Imagens Turi/thumbnail_logo-equipe.png' width='500'/>
 <div>
