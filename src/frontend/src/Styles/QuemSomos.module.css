@@ -1,0 +1,34 @@
+
+.container {
+  display: flex;
+  justify-content: center; 
+  align-items: center; 
+  height: 100%; 
+  padding: 2rem;
+}
+
+
+.card {
+  background-color: #e5e7eb; 
+  padding: 3rem; 
+  border-radius: 12px; 
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
+  text-align: center; 
+  max-width: 1000px; 
+  width: 100%; 
+  font-family: Arial, sans-serif;
+}
+
+
+.title {
+  font-size: 2.5rem; 
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+
+.card p {
+  font-size: 1.2rem; 
+  line-height: 1.8; 
+  color: #374151; 
+}
