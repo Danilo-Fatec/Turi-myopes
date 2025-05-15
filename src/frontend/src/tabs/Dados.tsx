@@ -1,31 +1,81 @@
-import React, { useState } from 'react';
-import BarChart from '../components/BarChart';
-import styles from '../Styles/Dados.module.css';
+import React, { useCallback, useEffect, useState } from 'react'
+import BarChart from '../components/BarChart'
+import styles from '../Styles/Dados.module.css'
+import { getServiceByFilters } from '../services/getDataByFiltersService'
+import axios from 'axios';
+import api from '../services/api';
 
 const Dados: React.FC = () => {
-  const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
-  const [dataType, setDataType] = useState<'focos' | 'riscos' | 'queimadas'>('focos');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [region, setRegion] = useState<string>('');
+  const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado')
+  const [dataType, setDataType] = useState<'focos' | 'risco' | 'areas'>('focos')
+  const [startDate, setStartDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
+  const [region, setRegion] = useState<string>('')
+  const [chartLabels, setChartLabels] = useState<string[]>([])
+  const [chartData, setChartData] = useState<number[]>([])
+  const [labels, setLabels] = useState<string[]>([]);
+  const [data, setData] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleApplyFilters = () => {
-    console.log('Filtros Aplicados:', { mapType, dataType, startDate, endDate, region });
+  const fetchData = async (dataType: string, mapType: string) => {
+    try {
+      const response = await api.get(`/${dataType}-${mapType}`)
+      const data = response.data
+
+      console.log('Dados recebidos do backend:', data)
+
+      const labels = data.map((item: any) => item.estado || item.bioma)
+      const values = data.map((item: any) =>
+        dataType === 'focos'
+          ? item.total_focos
+          : dataType === 'risco'
+            ? item.risco_medio
+            : item.total_precipitacao
+      )
+
+      console.log('Labels mapeados:', labels)
+      console.log('Values mapeados:', values)
+
+      return { labels, values }
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error)
+      return { labels: [], values: [] }
+    }
+  }
+
+  useEffect(() => {
+    const carregarDados = async () => {
+      setLoading(true)
+      const { labels, values } = await fetchData(dataType, mapType)
+      setChartLabels(labels)
+      setChartData(values)
+      setLoading(false)
+    }
+
+    carregarDados()
+  }, [dataType, mapType, region])
+
+  const handleApplyFilters = async () => {
+    setLoading(true)
+    try {
+      const { labels: fetchedLabels, values: fetchedValues } = await fetchData(dataType, mapType)
+
+      console.log('Labels recebidos do backend:', fetchedLabels)
+      console.log('Data recebidos do backend:', fetchedValues)
+
+      setLabels(fetchedLabels || [])
+      setData(fetchedValues || [])
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error)
+    } finally {
+      setLoading(false)
+    }
   };
 
-  // Dados fictícios para o gráfico
-  const chartData = {
-    labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio'],
-    datasets: [
-      {
-        label: 'Dados Selecionados',
-        data: [65, 59, 80, 81, 56],
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
+  useEffect(() => {
+    console.log('Labels atualizados no Dados.tsx:', labels);
+    console.log('Data atualizados no Dados.tsx:', data);
+  }, [labels, data]);
 
   return (
     <section>
@@ -64,7 +114,7 @@ const Dados: React.FC = () => {
                 name="dataType"
                 value="focos"
                 checked={dataType === 'focos'}
-                onChange={(e) => setDataType(e.target.value as 'focos' | 'riscos' | 'queimadas')}
+                onChange={(e) => setDataType(e.target.value as 'focos' | 'risco' | 'areas')}
               />
               Focos de Calor
             </label>
@@ -72,9 +122,9 @@ const Dados: React.FC = () => {
               <input
                 type="radio"
                 name="dataType"
-                value="riscos"
-                checked={dataType === 'riscos'}
-                onChange={(e) => setDataType(e.target.value as 'focos' | 'riscos' | 'queimadas')}
+                value="risco"
+                checked={dataType === 'risco'}
+                onChange={(e) => setDataType(e.target.value as 'focos' | 'risco' | 'areas')}
               />
               Risco de Fogo
             </label>
@@ -82,9 +132,9 @@ const Dados: React.FC = () => {
               <input
                 type="radio"
                 name="dataType"
-                value="queimadas"
-                checked={dataType === 'queimadas'}
-                onChange={(e) => setDataType(e.target.value as 'focos' | 'riscos' | 'queimadas')}
+                value="areas"
+                checked={dataType === 'areas'}
+                onChange={(e) => setDataType(e.target.value as 'focos' | 'risco' | 'areas')}
               />
               Áreas Queimadas
             </label>
@@ -133,9 +183,13 @@ const Dados: React.FC = () => {
       </div>
 
       <div className={styles.chartContainer}>
-        <h3>Média de todos os dados</h3>
+        <h3>{`Dados de ${dataType} por ${mapType}`}</h3>
         <div className={styles.chartWrapper}>
-          <BarChart labels={chartData.labels} data={chartData.datasets[0].data} title="Média de todos os dados" />
+          {loading ? (
+            <p>Carregando dados...</p>
+          ) : (
+            <BarChart labels={labels} data={data} title={`${dataType} por ${mapType}`} />
+          )}
         </div>
         <p className={styles.chartLegend}>
           <strong>Legenda:</strong> Este gráfico representa a média dos dados selecionados ao longo dos meses.

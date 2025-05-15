@@ -2,17 +2,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import L, { Map } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styles from '../Styles/Mapa.module.css';
+import MapaInterface from '../interfaces/mapaInterface';
 
-const Mapa: React.FC = () => {
+const Mapa: React.FC<MapaInterface> = ( {focosDeCalor = false, riscoDeFogo = false, areasQueimadas = false} ) => {
   const mapRef = useRef<Map | null>(null);
   const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
   const [dataType, setDataType] = useState<'focos' | 'riscos' | 'queimadas'>('focos');
   const [estado, setEstado] = useState<string>('');
   const [cidade, setCidade] = useState<string>('');
+  const [isFocosDeCalor, setIsFocosDeCalor] = useState<boolean>(focosDeCalor)
+  const [isRiscoDeFogo, setIsRiscoDeFogo] = useState<boolean>(riscoDeFogo)
+  const [isAreasQueimadas, setIsAreasQueimadas] = useState<boolean>(areasQueimadas)
 
   useEffect(() => {
     if (mapRef.current === null) {
-      
       const map = L.map('mapid', {
         center: [-14.235, -51.9253], 
         zoom: 4, 
@@ -24,10 +27,33 @@ const Mapa: React.FC = () => {
     }
   }, []);
 
+  const isTrue = () => {
+    if (focosDeCalor) {
+      
+    }
+  }
+
   const handleFilterApply = () => {
     console.log('Filtros aplicados:', { mapType, dataType, estado, cidade });
     
   };
+
+  const toggleOption = (option: 'focosDeCalor' | 'riscoDeFogo' | 'areasQueimadas') => {
+    switch (option){
+      case 'focosDeCalor':
+        setIsFocosDeCalor(!isFocosDeCalor)
+        break
+      case 'riscoDeFogo':
+        setIsRiscoDeFogo(!isRiscoDeFogo)
+        break
+      case 'areasQueimadas':
+        setIsAreasQueimadas(!isAreasQueimadas)
+        break
+      default:
+        console.log("erro de opção toggleOption")
+        break
+    }
+  }
 
   return (
     <section className={styles.container}>
@@ -65,7 +91,7 @@ const Mapa: React.FC = () => {
               type="radio"
               name="dataType"
               value="focos"
-              checked={dataType === 'focos'}
+              checked={isFocosDeCalor}
               onChange={(e) => setDataType(e.target.value as 'focos' | 'riscos' | 'queimadas')}
             />
             Focos de Calor
@@ -75,7 +101,7 @@ const Mapa: React.FC = () => {
               type="radio"
               name="dataType"
               value="riscos"
-              checked={dataType === 'riscos'}
+              checked={isRiscoDeFogo}
               onChange={(e) => setDataType(e.target.value as 'focos' | 'riscos' | 'queimadas')}
             />
             Riscos de Fogo
@@ -85,7 +111,7 @@ const Mapa: React.FC = () => {
               type="radio"
               name="dataType"
               value="queimadas"
-              checked={dataType === 'queimadas'}
+              checked={isAreasQueimadas}
               onChange={(e) => setDataType(e.target.value as 'focos' | 'riscos' | 'queimadas')}
             />
             Áreas Queimadas

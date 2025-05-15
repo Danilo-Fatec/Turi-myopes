@@ -22,11 +22,11 @@ const BarChart: React.FC<BarChartProps> = ({ labels, data, title }) => {
       chartInstance.current = new Chart(chartRef.current, {
         type: 'bar',
         data: {
-          labels,
+          labels: labels.length > 0 ? labels : ['Sem dados'],
           datasets: [
             {
               label: title,
-              data,
+              data: data.length > 0 ? data : [0],
               backgroundColor: 'rgba(75, 192, 192, 0.2)', 
               borderColor: 'rgba(75, 192, 192, 1)', 
               borderWidth: 1, 
@@ -71,6 +71,11 @@ const BarChart: React.FC<BarChartProps> = ({ labels, data, title }) => {
       }
     };
   }, [labels, data, title]);
+
+  useEffect(() => {
+    console.log('Labels atualizados:', labels);
+    console.log('Data atualizados:', data);
+  }, [labels, data]);
 
   return <canvas ref={chartRef}></canvas>; 
 };
