@@ -103,3 +103,7 @@ p {
     margin-bottom: 0.75rem;
   }
 }
+a {
+  text-decoration: none;
+  color: inherit;
+}
