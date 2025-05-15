@@ -5,9 +5,10 @@ interface BarChartProps {
   labels: string[]; 
   data: number[]; 
   title: string; 
+  isPercentage?: boolean;
 }
 
-const BarChart: React.FC<BarChartProps> = ({ labels, data, title }) => {
+const BarChart: React.FC<BarChartProps> = ({ labels, data, title, isPercentage = false }) => {
   const chartRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstance = useRef<Chart | null>(null);
 
@@ -58,6 +59,7 @@ const BarChart: React.FC<BarChartProps> = ({ labels, data, title }) => {
                 display: true,
                 text: 'Valores', 
               },
+              max: isPercentage ? 100 : undefined,
             },
           },
         },
@@ -70,7 +72,7 @@ const BarChart: React.FC<BarChartProps> = ({ labels, data, title }) => {
         chartInstance.current.destroy();
       }
     };
-  }, [labels, data, title]);
+  }, [labels, data, title, isPercentage]);
 
   useEffect(() => {
     console.log('Labels atualizados:', labels);

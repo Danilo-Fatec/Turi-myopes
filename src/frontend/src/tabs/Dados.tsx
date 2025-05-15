@@ -13,9 +13,25 @@ const Dados: React.FC = () => {
   const [region, setRegion] = useState<string>('')
   const [chartLabels, setChartLabels] = useState<string[]>([])
   const [chartData, setChartData] = useState<number[]>([])
-  const [labels, setLabels] = useState<string[]>([]);
-  const [data, setData] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [labels, setLabels] = useState<string[]>([])
+  const [data, setData] = useState<number[]>([])
+  const [loading, setLoading] = useState(false)
+  const [percentage, isPercentage] = useState(false)
+
+  function transformarValoresEmPorcentagem(
+    labels: string[],
+    values: number[]
+  ): { labels: string[]; values: number[] } {
+    const total = values.reduce((acc, val) => acc + val, 0);
+
+    if (total === 0) return { labels, values: values.map(() => 0) };
+
+    const valoresEmPorcentagem = values.map(val =>
+      parseFloat(((val / total) * 100).toFixed(2))
+    );
+
+    return { labels, values: valoresEmPorcentagem };
+  }
 
   const fetchData = async (dataType: string, mapType: string) => {
     try {
@@ -27,10 +43,10 @@ const Dados: React.FC = () => {
       const labels = data.map((item: any) => item.estado || item.bioma)
       const values = data.map((item: any) =>
         dataType === 'focos'
-          ? item.total_focos
+          ? Number(item.total_focos)
           : dataType === 'risco'
-            ? item.risco_medio
-            : item.total_precipitacao
+            ? Number(item.risco_medio)
+            : Number(item.total_precipitacao)
       )
 
       console.log('Labels mapeados:', labels)
@@ -60,11 +76,23 @@ const Dados: React.FC = () => {
     try {
       const { labels: fetchedLabels, values: fetchedValues } = await fetchData(dataType, mapType)
 
-      console.log('Labels recebidos do backend:', fetchedLabels)
-      console.log('Data recebidos do backend:', fetchedValues)
+      let percentageLabels = fetchedLabels
+      let percentageValues = fetchedValues
 
-      setLabels(fetchedLabels || [])
-      setData(fetchedValues || [])
+      if (dataType === 'focos' || dataType === 'areas') {
+        const porcentagem = transformarValoresEmPorcentagem(fetchedLabels, fetchedValues)
+        percentageLabels = porcentagem.labels
+        percentageValues = porcentagem.values
+        isPercentage(true)
+      } else {
+        isPercentage(false)
+      }
+
+      console.log('Labels recebidos do backend:', percentageLabels)
+      console.log('Data recebidos do backend:', percentageValues)
+
+      setLabels(percentageLabels || [])
+      setData(percentageValues || [])
     } catch (error) {
       console.error('Erro ao buscar dados:', error)
     } finally {
@@ -73,9 +101,9 @@ const Dados: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log('Labels atualizados no Dados.tsx:', labels);
-    console.log('Data atualizados no Dados.tsx:', data);
-  }, [labels, data]);
+    console.log('Labels atualizados no Dados.tsx:', labels)
+    console.log('Data atualizados no Dados.tsx:', data)
+  }, [labels, data])
 
   return (
     <section>
@@ -188,7 +216,7 @@ const Dados: React.FC = () => {
           {loading ? (
             <p>Carregando dados...</p>
           ) : (
-            <BarChart labels={labels} data={data} title={`${dataType} por ${mapType}`} />
+            <BarChart labels={labels} data={data} title={`${dataType} por ${mapType}`} isPercentage={percentage} />
           )}
         </div>
         <p className={styles.chartLegend}>
