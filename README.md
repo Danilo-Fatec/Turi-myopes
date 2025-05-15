@@ -84,6 +84,11 @@ RF19 – Logo clicável para que o usuário possa voltar a página inicial  | Us
  <img src="Sprints/Imagens Turi/burndown_finalsp1.PNG">
  </div>
 
+ # BURNDOWN SP2
+ <div align = center>
+ <img src="Sprints/Imagens Turi/burndown_finalsp2.PNG">
+ </div>
+
 -----------------------------------------------------------------------------------
 
 # WIREFRAME
@@ -106,7 +111,7 @@ RF19 – Logo clicável para que o usuário possa voltar a página inicial  | Us
 [Clique Aqui](https://www.figma.com/design/JZJ1FFENJMPP3n83jAIiWi/SIte--Turi?node-id=160-2&p=f&t=ZbwVj6U7R594W129-0)
 
 ### ATA DE REUNIÃO SCRUM 
-[Clique Aqui]()
+[Clique Aqui](https://github.com/Danilo-Fatec/Myopes/tree/main/Sprints/Ata%20DSM2)
 
 # :computer: EQUIPE
 
