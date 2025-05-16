@@ -5,6 +5,48 @@ import { getServiceByFilters } from '../services/getDataByFiltersService'
 import axios from 'axios';
 import api from '../services/api';
 
+const BIOMAS = [
+  "Todos",
+  "Amazônia",
+  "Cerrado",
+  "Caatinga",
+  "Mata Atlântica",
+  "Pampa",
+  "Pantanal"
+];
+
+const ESTADOS = [
+  "Todos",
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
+  "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"
+];
+
+const defaultColors = [
+  '#00E1FF', // neon blue
+  '#FF005A', // pink
+  '#FFD600', // yellow
+  '#00D26A', // green
+  '#FF8A00', // orange
+  '#B700FF', // purple
+  '#FF3D00', // red
+  '#49FF00', // lime
+  '#0091FF', // blue
+  '#FF00C3', // magenta
+];
+
+function top10LabelsAndValues(labels: string[], values: number[]) {
+  const zipped = labels.map((label, idx) => ({
+    label,
+    value: values[idx]
+  }));
+  zipped.sort((a, b) => b.value - a.value);
+  const sliced = zipped.slice(0, 10);
+  return {
+    labels: sliced.map(item => item.label),
+    values: sliced.map(item => item.value)
+  };
+}
+
 const Dados: React.FC = () => {
   const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado')
   const [dataType, setDataType] = useState<'focos' | 'risco' | 'areas'>('focos')
@@ -38,8 +80,6 @@ const Dados: React.FC = () => {
       const response = await api.get(`/${dataType}-${mapType}`)
       const data = response.data
 
-      console.log('Dados recebidos do backend:', data)
-
       const labels = data.map((item: any) => item.estado || item.bioma)
       const values = data.map((item: any) =>
         dataType === 'focos'
@@ -49,12 +89,8 @@ const Dados: React.FC = () => {
             : Number(item.total_precipitacao)
       )
 
-      console.log('Labels mapeados:', labels)
-      console.log('Values mapeados:', values)
-
       return { labels, values }
     } catch (error) {
-      console.error('Erro ao buscar dados:', error)
       return { labels: [], values: [] }
     }
   }
@@ -88,22 +124,25 @@ const Dados: React.FC = () => {
         isPercentage(false)
       }
 
-      console.log('Labels recebidos do backend:', percentageLabels)
-      console.log('Data recebidos do backend:', percentageValues)
+      // Exibe apenas os 10 maiores se houver mais de 10
+      let topLabels = percentageLabels;
+      let topValues = percentageValues;
+      if (percentageLabels.length > 10) {
+        const top = top10LabelsAndValues(percentageLabels, percentageValues);
+        topLabels = top.labels;
+        topValues = top.values;
+      }
 
-      setLabels(percentageLabels || [])
-      setData(percentageValues || [])
+      setLabels(topLabels || [])
+      setData(topValues || [])
     } catch (error) {
-      console.error('Erro ao buscar dados:', error)
     } finally {
       setLoading(false)
     }
   };
 
-  useEffect(() => {
-    console.log('Labels atualizados no Dados.tsx:', labels)
-    console.log('Data atualizados no Dados.tsx:', data)
-  }, [labels, data])
+  // Usa as labels já filtradas (top 10) para legenda e referência
+  const referencias = labels.length > 0 ? labels : (mapType === 'bioma' ? BIOMAS : ESTADOS);
 
   return (
     <section>
@@ -196,11 +235,9 @@ const Dados: React.FC = () => {
               onChange={(e) => setRegion(e.target.value)}
             >
               <option value="">Selecione</option>
-              <option value="SP">São Paulo</option>
-              <option value="MG">Minas Gerais</option>
-              <option value="PA">Pará</option>
-              <option value="Amazônia">Amazônia</option>
-              <option value="Cerrado">Cerrado</option>
+              {(mapType === 'bioma' ? BIOMAS : ESTADOS).map((ref) => (
+                <option value={ref} key={ref}>{ref}</option>
+              ))}
             </select>
           </div>
 
@@ -216,12 +253,48 @@ const Dados: React.FC = () => {
           {loading ? (
             <p>Carregando dados...</p>
           ) : (
-            <BarChart labels={labels} data={data} title={`${dataType} por ${mapType}`} isPercentage={percentage} />
+            <BarChart
+              labels={labels}
+              data={data}
+              title={`${dataType} por ${mapType}`}
+              isPercentage={percentage}
+            />
           )}
         </div>
         <p className={styles.chartLegend}>
           <strong>Legenda:</strong> Este gráfico representa a média dos dados selecionados ao longo dos meses.
         </p>
+        <div className={styles.refLegend}>
+          <strong>Referências exibidas:</strong>
+          <ul>
+            {referencias.map((item, idx) => (
+              <li key={item}>
+                <span
+                  className={styles.refColor}
+                  style={{
+                    background:
+                      idx < defaultColors.length
+                        ? defaultColors[idx]
+                        : defaultColors[idx % defaultColors.length]
+                  }}
+                ></span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+        {!loading && labels && labels.length > 0 && data && data.length > 0 && (
+          <div className={styles.dataLegend}>
+            <strong>Dados exibidos:</strong>
+            <ul>
+              {labels.map((label, idx) => (
+                <li key={label}>
+                  <span style={{fontWeight: 600}}>{label}:</span> {data[idx]}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </section>
   );
