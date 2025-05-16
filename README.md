@@ -86,7 +86,7 @@ RF19 – Logo clicável para que o usuário possa voltar a página inicial  | Us
 
  # BURNDOWN SP2
  <div align = center>
- <img src="Sprints/Imagens Turi/burndown_finalsp2.PNG">
+ <img src="Sprints/Imagens Turi/burndown-SP2.PNG">
  </div>
 
 -----------------------------------------------------------------------------------
