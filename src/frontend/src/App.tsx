@@ -8,7 +8,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('inicio');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Ler tema salvo ou padrão claro
+  
   useEffect(() => {
     const saved = localStorage.getItem('theme');
     if (saved === 'dark' || saved === 'light') {
@@ -20,7 +20,7 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Atualizar <html> e salvar sempre que mudar
+ 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);

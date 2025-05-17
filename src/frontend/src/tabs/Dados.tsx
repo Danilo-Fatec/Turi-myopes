@@ -124,7 +124,7 @@ const Dados: React.FC = () => {
         isPercentage(false)
       }
 
-      // Exibe apenas os 10 maiores se houver mais de 10
+      
       let topLabels = percentageLabels;
       let topValues = percentageValues;
       if (percentageLabels.length > 10) {
@@ -141,7 +141,7 @@ const Dados: React.FC = () => {
     }
   };
 
-  // Usa as labels já filtradas (top 10) para legenda e referência
+  
   const referencias = labels.length > 0 ? labels : (mapType === 'bioma' ? BIOMAS : ESTADOS);
 
   return (

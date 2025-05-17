@@ -46,10 +46,11 @@ const BarChart: React.FC<BarChartProps> = ({
             {
               label: title,
               data: data.length > 0 ? data : [0],
-              backgroundColor: labels.map((_, idx) => barColors[idx % barColors.length]),
-              borderColor: '#111',
-              borderWidth: 2,
-              borderRadius: 2,
+              backgroundColor: labels.map((_, idx) => barColors[idx % barColors.length]), 
+              borderColor: '#111', 
+              borderWidth: 2, 
+              borderRadius: 2, 
+              
             },
           ],
         },
@@ -81,6 +82,7 @@ const BarChart: React.FC<BarChartProps> = ({
                   size: 16
                 }
               }
+              
             },
             y: {
               beginAtZero: true,
@@ -101,9 +103,15 @@ const BarChart: React.FC<BarChartProps> = ({
           },
           elements: {
             bar: {
-              borderWidth: 2,
+              borderWidth: 2, 
             },
           },
+          datasets: {
+            bar: {
+              categoryPercentage: 0.3, 
+              barPercentage: 0.7,      
+            }
+          }
         },
       });
     }

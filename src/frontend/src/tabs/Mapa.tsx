@@ -3,29 +3,35 @@ import L, { Map } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styles from '../Styles/Mapa.module.css';
 import MapaInterface from '../interfaces/mapaInterface';
+import { ESTADOS_BRASIL, BIOMAS_BRASIL } from '../constants/mapFilters';
+import { ESTADO_CENTERS, BIOMA_CENTERS } from '../constants/mapCenters';
 
-const Mapa: React.FC<MapaInterface> = ( {focosDeCalor = false, riscoDeFogo = false, areasQueimadas = false} ) => {
+const Mapa: React.FC<MapaInterface> = ({
+  focosDeCalor = false,
+  riscoDeFogo = false,
+  areasQueimadas = false,
+}) => {
   const mapRef = useRef<Map | null>(null);
   const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
   const [dataType, setDataType] = useState<'focos' | 'riscos' | 'queimadas'>('focos');
   const [estado, setEstado] = useState<string>('');
+  const [bioma, setBioma] = useState<string>('');
   const [cidade, setCidade] = useState<string>('');
-  const [isFocosDeCalor, setIsFocosDeCalor] = useState<boolean>(focosDeCalor)
-  const [isRiscoDeFogo, setIsRiscoDeFogo] = useState<boolean>(riscoDeFogo)
-  const [isAreasQueimadas, setIsAreasQueimadas] = useState<boolean>(areasQueimadas)
+  const [isFocosDeCalor, setIsFocosDeCalor] = useState<boolean>(focosDeCalor);
+  const [isRiscoDeFogo, setIsRiscoDeFogo] = useState<boolean>(riscoDeFogo);
+  const [isAreasQueimadas, setIsAreasQueimadas] = useState<boolean>(areasQueimadas);
 
   useEffect(() => {
     if (mapRef.current === null) {
-      // Limites aproximados do Brasil (sudoeste, nordeste)
       const brazilBounds: L.LatLngBoundsExpression = [
-        [-33.750000, -73.990000], // Sudoeste do Brasil
-        [5.270000, -34.790000]    // Nordeste do Brasil
+        [-33.75, -73.99],
+        [5.27, -34.79],
       ];
       const map = L.map('mapid', {
-        center: [-14.235, -51.9253], 
-        zoom: 4, 
+        center: [-14.235, -51.9253],
+        zoom: 4,
         maxBounds: brazilBounds,
-        maxBoundsViscosity: 1.0 // Impede que o usuário navegue para fora do Brasil
+        maxBoundsViscosity: 1.0,
       });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data © OpenStreetMap contributors',
@@ -34,38 +40,23 @@ const Mapa: React.FC<MapaInterface> = ( {focosDeCalor = false, riscoDeFogo = fal
     }
   }, []);
 
-  const isTrue = () => {
-    if (focosDeCalor) {
-      
-    }
-  }
+  const handleFilterApply = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
-  const handleFilterApply = () => {
-    console.log('Filtros aplicados:', { mapType, dataType, estado, cidade });
-    
+    if (mapRef.current) {
+      if (mapType === 'estado' && estado && ESTADO_CENTERS[estado]) {
+        mapRef.current.setView(ESTADO_CENTERS[estado], 6); 
+      } else if (mapType === 'bioma' && bioma && BIOMA_CENTERS[bioma]) {
+        mapRef.current.setView(BIOMA_CENTERS[bioma], 5); 
+      }
+    }
+
+    console.log('Filtros aplicados:', { mapType, dataType, estado, cidade, bioma });
   };
-
-  const toggleOption = (option: 'focosDeCalor' | 'riscoDeFogo' | 'areasQueimadas') => {
-    switch (option){
-      case 'focosDeCalor':
-        setIsFocosDeCalor(!isFocosDeCalor)
-        break
-      case 'riscoDeFogo':
-        setIsRiscoDeFogo(!isRiscoDeFogo)
-        break
-      case 'areasQueimadas':
-        setIsAreasQueimadas(!isAreasQueimadas)
-        break
-      default:
-        console.log("erro de opção toggleOption")
-        break
-    }
-  }
 
   return (
     <section className={styles.container}>
-      {}
-      <div className={styles.filterPanel}>
+      <form className={styles.filterPanel} onSubmit={handleFilterApply}>
         <h2>Filtros</h2>
         <div className={styles.radioGroup}>
           <p>Tipo de mapa:</p>
@@ -75,7 +66,7 @@ const Mapa: React.FC<MapaInterface> = ( {focosDeCalor = false, riscoDeFogo = fal
               name="mapType"
               value="estado"
               checked={mapType === 'estado'}
-              onChange={(e) => setMapType(e.target.value as 'estado' | 'bioma')}
+              onChange={() => setMapType('estado')}
             />
             Estados
           </label>
@@ -85,7 +76,7 @@ const Mapa: React.FC<MapaInterface> = ( {focosDeCalor = false, riscoDeFogo = fal
               name="mapType"
               value="bioma"
               checked={mapType === 'bioma'}
-              onChange={(e) => setMapType(e.target.value as 'estado' | 'bioma')}
+              onChange={() => setMapType('bioma')}
             />
             Biomas
           </label>
@@ -99,7 +90,7 @@ const Mapa: React.FC<MapaInterface> = ( {focosDeCalor = false, riscoDeFogo = fal
               name="dataType"
               value="focos"
               checked={isFocosDeCalor}
-              onChange={(e) => setDataType(e.target.value as 'focos' | 'riscos' | 'queimadas')}
+              onChange={() => setDataType('focos')}
             />
             Focos de Calor
           </label>
@@ -109,7 +100,7 @@ const Mapa: React.FC<MapaInterface> = ( {focosDeCalor = false, riscoDeFogo = fal
               name="dataType"
               value="riscos"
               checked={isRiscoDeFogo}
-              onChange={(e) => setDataType(e.target.value as 'focos' | 'riscos' | 'queimadas')}
+              onChange={() => setDataType('riscos')}
             />
             Riscos de Fogo
           </label>
@@ -119,7 +110,7 @@ const Mapa: React.FC<MapaInterface> = ( {focosDeCalor = false, riscoDeFogo = fal
               name="dataType"
               value="queimadas"
               checked={isAreasQueimadas}
-              onChange={(e) => setDataType(e.target.value as 'focos' | 'riscos' | 'queimadas')}
+              onChange={() => setDataType('queimadas')}
             />
             Áreas Queimadas
           </label>
@@ -129,25 +120,37 @@ const Mapa: React.FC<MapaInterface> = ( {focosDeCalor = false, riscoDeFogo = fal
           <div className={styles.selectGroup}>
             <select value={estado} onChange={(e) => setEstado(e.target.value)}>
               <option value="">Estado</option>
-              <option value="SP">São Paulo</option>
-              <option value="MG">Minas Gerais</option>
-              <option value="PA">Pará</option>
+              {ESTADOS_BRASIL.map((uf) => (
+                <option key={uf} value={uf}>
+                  {uf}
+                </option>
+              ))}
             </select>
             <select value={cidade} onChange={(e) => setCidade(e.target.value)}>
               <option value="">Cidade</option>
-              <option value="Cidade 1">Cidade 1</option>
-              <option value="Cidade 2">Cidade 2</option>
-              <option value="Cidade 3">Cidade 3</option>
+              {/* Opções de cidade conforme estado selecionado */}
             </select>
           </div>
         )}
 
-        <button className={styles.applyButton} onClick={handleFilterApply}>
+        {mapType === 'bioma' && (
+          <div className={styles.selectGroup}>
+            <select value={bioma} onChange={(e) => setBioma(e.target.value)}>
+              <option value="">Bioma</option>
+              {BIOMAS_BRASIL.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <button className={styles.applyButton} type="submit">
           Ativar Filtros
         </button>
-      </div>
+      </form>
 
-      {}
       <div id="mapid" className={styles.map}></div>
     </section>
   );
