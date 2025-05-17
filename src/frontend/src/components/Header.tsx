@@ -4,9 +4,11 @@ import styles from '../app.module.css';
 
 interface HeaderProps {
   showTab: (tab: string) => void;
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ showTab }) => {
+const Header: React.FC<HeaderProps> = ({ showTab, theme, toggleTheme }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -15,17 +17,12 @@ const Header: React.FC<HeaderProps> = ({ showTab }) => {
 
   return (
     <header className={styles.header}>
-      
       <div className={styles.logo}>
         <img src="./img/unnamed.png" alt="Turi Logo" />
       </div>
-
-      
       <button className={styles.hamburger} onClick={toggleMenu}>
         &#9776; 
       </button>
-
-      
       <nav
         className={`${styles.navContainer} ${
           menuOpen ? styles.active : ''
@@ -43,6 +40,13 @@ const Header: React.FC<HeaderProps> = ({ showTab }) => {
         <Link to="/quem-somos" className={styles.navBtn}>
           Quem Somos
         </Link>
+        <button
+          className={styles.themeToggle}
+          onClick={toggleTheme}
+          aria-label="Alternar tema"
+        >
+          {theme === 'dark' ? '☀️ Claro' : '🌙 Escuro'}
+        </button>
       </nav>
     </header>
   );

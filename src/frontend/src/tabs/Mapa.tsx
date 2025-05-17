@@ -16,9 +16,16 @@ const Mapa: React.FC<MapaInterface> = ( {focosDeCalor = false, riscoDeFogo = fal
 
   useEffect(() => {
     if (mapRef.current === null) {
+      // Limites aproximados do Brasil (sudoeste, nordeste)
+      const brazilBounds: L.LatLngBoundsExpression = [
+        [-33.750000, -73.990000], // Sudoeste do Brasil
+        [5.270000, -34.790000]    // Nordeste do Brasil
+      ];
       const map = L.map('mapid', {
         center: [-14.235, -51.9253], 
         zoom: 4, 
+        maxBounds: brazilBounds,
+        maxBoundsViscosity: 1.0 // Impede que o usuário navegue para fora do Brasil
       });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data © OpenStreetMap contributors',

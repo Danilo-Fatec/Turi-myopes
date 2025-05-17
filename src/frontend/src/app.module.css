@@ -1,22 +1,44 @@
+:root {
+  --background: #fff;
+  --background-main: #f9f9f9;
+  --text: #222;
+  --header-bg: #1e3a8a;
+  --header-text: #fff;
+  --footer-bg: #1e3a8a;
+  --footer-text: #fff;
+  --nav-hover: #add8e6;
+}
+
+[data-theme="dark"] {
+  --background: #181818;
+  --background-main: #222b3a;
+  --text: #f6f6f6;
+  --header-bg: #0c214e;
+  --header-text: #f6f6f6;
+  --footer-bg: #0c214e;
+  --footer-text: #f6f6f6;
+  --nav-hover: #7cc8fa;
+}
 
 .app {
   display: flex;
   flex-direction: column;
   min-height: 100vh; 
+  background: var(--background);
+  color: var(--text);
 }
-
 
 .main {
   flex: 1; 
   padding: 1rem; 
   box-sizing: border-box; 
-  background-color: #f9f9f9; 
+  background-color: var(--background-main);
+  color: var(--text);
 }
 
-
 .header {
-  background-color: #1e3a8a;
-  color: white;
+  background-color: var(--header-bg);
+  color: var(--header-text);
   padding: 1rem;
   display: flex;
   justify-content: space-between;
@@ -36,7 +58,7 @@
 
 .navBtn {
   background: none; 
-  color: white; 
+  color: var(--header-text); 
   border: none;
   cursor: pointer;
   font-size: 1rem;
@@ -46,8 +68,25 @@
 
 
 .navBtn:hover {
-  color: #add8e6; 
+  color: var(--nav-hover); 
   transform: scale(1.1); 
+}
+
+.themeToggle {
+  background: none;
+  color: var(--header-text);
+  border: 1px solid var(--header-text);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.themeToggle:hover {
+  background: var(--nav-hover);
+  color: var(--header-bg);
+  border: 1px solid var(--nav-hover);
 }
 
 
@@ -55,7 +94,7 @@
   display: none; 
   background: none;
   border: none;
-  color: white;
+  color: var(--header-text);
   font-size: 1.5rem;
   cursor: pointer;
 }
@@ -70,7 +109,7 @@
     display: none; 
     flex-direction: column; 
     gap: 0.5rem;
-    background-color: #1e3a8a;
+    background-color: var(--header-bg);
     position: absolute;
     top: 100%;
     right: 0;
@@ -92,8 +131,8 @@
 
 
 .footer {
-  background-color: #1e3a8a; 
-  color: white; 
+  background-color: var(--footer-bg); 
+  color: var(--footer-text); 
   text-align: center; 
   padding: 1rem; 
   width: 100%; 

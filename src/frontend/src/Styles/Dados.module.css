@@ -1,11 +1,33 @@
+:root {
+  --filter-bg: #f3f4f6;
+  --filter-text: #222;
+  --filter-border: #d1d5db;
+  --filter-input-bg: #fff;
+  --chart-bg: #fff;
+  --legend-bg: #f3f4f6;
+  --legend-text: #222;
+}
+
+[data-theme="dark"] {
+  --filter-bg: #23272f;
+  --filter-text: #f6f6f6;
+  --filter-border: #38404a;
+  --filter-input-bg: #181818;
+  --chart-bg: #181818;
+  --legend-bg: #23272f;
+  --legend-text: #f6f6f6;
+}
+
 .filterContainer {
-  background-color: #f3f4f6;
+  background-color: var(--filter-bg);
+  color: var(--filter-text);
   padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 1rem; 
   width: 100%;
   box-sizing: border-box;
+  border: 1px solid var(--filter-border);
 }
 
 .filters {
@@ -26,6 +48,26 @@
 .filterGroup p {
   font-weight: bold;
   margin: 0;
+  color: var(--filter-text);
+}
+
+.filterContainer label {
+  color: var(--filter-text);
+}
+
+.filterContainer select,
+.filterContainer input[type="radio"],
+.filterContainer input[type="date"] {
+  background: var(--filter-input-bg);
+  color: var(--filter-text);
+  border: 1px solid var(--filter-border);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.filterContainer input[type="radio"] {
+  margin-right: 0.5rem;
 }
 
 .applyButton {
@@ -45,7 +87,7 @@
 }
 
 .chartContainer {
-  background-color: #ffffff;
+  background-color: var(--chart-bg);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
@@ -57,6 +99,7 @@
   margin-top: 1rem; 
   width: 100%; 
   box-sizing: border-box;
+  color: var(--filter-text);
 }
 
 .chartWrapper {
@@ -74,6 +117,7 @@ canvas {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(255, 0, 90, 0.07);
   border: 1.5px solid #00E1FF;
+  background: var(--chart-bg);
 }
 
 @media (max-width: 768px) {
@@ -106,12 +150,12 @@ canvas {
 .dataLegend {
   margin: 1rem auto 0 auto;
   padding: 0.75rem 1rem;
-  background-color: #f3f4f6;
+  background-color: var(--legend-bg);
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0,225,255,0.15);
   max-width: 600px;
   font-size: 1rem;
-  color: #222;
+  color: var(--legend-text);
 }
 .dataLegend ul {
   list-style: none;
@@ -128,12 +172,12 @@ canvas {
 .refLegend {
   margin: 1rem auto 0 auto;
   padding: 0.75rem 1rem;
-  background-color: #f3f4f6;
+  background-color: var(--legend-bg);
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0,225,255,0.15);
   max-width: 600px;
   font-size: 1rem;
-  color: #222;
+  color: var(--legend-text);
 }
 .refLegend ul {
   list-style: none;

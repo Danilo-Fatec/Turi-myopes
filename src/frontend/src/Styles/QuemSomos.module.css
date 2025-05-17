@@ -1,3 +1,12 @@
+:root {
+  --card-bg: #e5e7eb;
+  --card-text: #374151;
+}
+
+[data-theme="dark"] {
+  --card-bg: #23272f;
+  --card-text: #f3f4f6;
+}
 
 .container {
   display: flex;
@@ -7,9 +16,8 @@
   padding: 2rem;
 }
 
-
 .card {
-  background-color: #e5e7eb; 
+  background-color: var(--card-bg); 
   padding: 3rem; 
   border-radius: 12px; 
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
@@ -19,16 +27,15 @@
   font-family: Arial, sans-serif;
 }
 
-
 .title {
   font-size: 2.5rem; 
   font-weight: bold;
   margin-bottom: 1.5rem;
+  color: var(--card-text);
 }
-
 
 .card p {
   font-size: 1.2rem; 
   line-height: 1.8; 
-  color: #374151; 
+  color: var(--card-text);
 }
