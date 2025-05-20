@@ -12,19 +12,30 @@ const Mapa: React.FC<MapaInterface> = ({
   areasQueimadas = false,
 }) => {
   const mapRef = useRef<Map | null>(null);
+
+  // Layers
   const brasilLayerRef = useRef<L.GeoJSON | null>(null);
   const estadoLayerRef = useRef<L.GeoJSON | null>(null);
-  const [geojsonData, setGeojsonData] = useState<any>(null);
+  const biomasLayerRef = useRef<L.GeoJSON | null>(null);
+  const biomaLayerRef = useRef<L.GeoJSON | null>(null);
+
+  // GeoJSON states
+  const [geojsonEstados, setGeojsonEstados] = useState<any>(null);
+  const [geojsonBiomas, setGeojsonBiomas] = useState<any>(null);
+
+  // Filtros e controles
   const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
   const [dataType, setDataType] = useState<'focos' | 'riscos' | 'queimadas'>('focos');
-  const [estado, setEstado] = useState<string>(''); // select temporario
-  const [estadoFiltrado, setEstadoFiltrado] = useState<string>(''); // usado para destacar
+  const [estado, setEstado] = useState<string>('');
+  const [estadoFiltrado, setEstadoFiltrado] = useState<string>('');
   const [bioma, setBioma] = useState<string>('');
+  const [biomaFiltrado, setBiomaFiltrado] = useState<string>('');
   const [cidade, setCidade] = useState<string>('');
   const [isFocosDeCalor, setIsFocosDeCalor] = useState<boolean>(focosDeCalor);
   const [isRiscoDeFogo, setIsRiscoDeFogo] = useState<boolean>(riscoDeFogo);
   const [isAreasQueimadas, setIsAreasQueimadas] = useState<boolean>(areasQueimadas);
 
+  // Inicialização do mapa
   useEffect(() => {
     if (mapRef.current === null) {
       const brazilBounds: L.LatLngBoundsExpression = [
@@ -44,48 +55,78 @@ const Mapa: React.FC<MapaInterface> = ({
     }
   }, []);
 
-  // Carrega o GeoJSON dos estados só uma vez
+  // Carrega os GeoJSONs
   useEffect(() => {
     fetch('/brazil-states.geojson')
       .then(res => res.json())
-      .then(data => setGeojsonData(data));
+      .then(data => setGeojsonEstados(data));
+    fetch('/brazil-biomes.geojson')
+      .then(res => res.json())
+      .then(data => setGeojsonBiomas(data));
   }, []);
 
-  // Camada permanente: contorno de todos os estados
+  // Camada permanente: contorno dos estados
   useEffect(() => {
-    if (!mapRef.current || !geojsonData) return;
+    if (!mapRef.current || !geojsonEstados) return;
+
     if (brasilLayerRef.current) {
       brasilLayerRef.current.remove();
       brasilLayerRef.current = null;
     }
-    const brasilLayer = L.geoJSON(geojsonData, {
+
+    // Só adiciona camada de estados se modo "estado" estiver ativo
+    if (mapType !== 'estado') return;
+
+    const brasilLayer = L.geoJSON(geojsonEstados, {
       style: {
-        color: '#bdbdbd',     // Cinza suave
+        color: '#bdbdbd',
         weight: 1.5,
         fillColor: 'transparent',
         fillOpacity: 0,
         opacity: 0.8,
       },
-      interactive: false // Não permite popup/click
+      interactive: false
     });
     brasilLayer.addTo(mapRef.current);
     brasilLayerRef.current = brasilLayer;
-  }, [geojsonData]);
+  }, [geojsonEstados, mapType]);
 
-  // Camada do estado filtrado/destacado
+  // Camada permanente: contorno dos biomas
   useEffect(() => {
-    if (!mapRef.current || !geojsonData) return;
+    if (!mapRef.current || !geojsonBiomas) return;
 
-    // Remove camada anterior
+    if (biomasLayerRef.current) {
+      biomasLayerRef.current.remove();
+      biomasLayerRef.current = null;
+    }
+
+    // Só adiciona camada de biomas se modo "bioma" estiver ativo
+    if (mapType !== 'bioma') return;
+
+    const biomasLayer = L.geoJSON(geojsonBiomas, {
+      style: {
+        color: '#43a047', // verde
+        weight: 2,
+        fillColor: 'transparent',
+        fillOpacity: 0,
+        opacity: 0.7,
+      },
+      interactive: false
+    });
+    biomasLayer.addTo(mapRef.current);
+    biomasLayerRef.current = biomasLayer;
+  }, [geojsonBiomas, mapType]);
+
+  // Camada do estado filtrado
+  useEffect(() => {
+    if (!mapRef.current || !geojsonEstados) return;
     if (estadoLayerRef.current) {
       estadoLayerRef.current.remove();
       estadoLayerRef.current = null;
     }
+    if (!estadoFiltrado || mapType !== 'estado') return;
 
-    // Só mostra marcação se houver filtro aplicado
-    if (!estadoFiltrado) return;
-
-    const estadoLayer = L.geoJSON(geojsonData, {
+    const estadoLayer = L.geoJSON(geojsonEstados, {
       style: (feature?: GeoJSON.Feature) => {
         const props = feature?.properties as any;
         const isSelected =
@@ -98,9 +139,9 @@ const Mapa: React.FC<MapaInterface> = ({
             props.UF === estadoFiltrado
           );
         return {
-          color: isSelected ? '#1976d2' : '#bbb',          // azul médio no contorno selecionado
+          color: isSelected ? '#1976d2' : '#bbb',
           weight: isSelected ? 3 : 1,
-          fillColor: isSelected ? '#bbdefb' : 'transparent', // azul suave
+          fillColor: isSelected ? '#bbdefb' : 'transparent',
           fillOpacity: isSelected ? 0.18 : 0,
           opacity: isSelected ? 0.9 : 0.5,
           dashArray: isSelected ? '3,8' : '2,10',
@@ -129,22 +170,74 @@ const Mapa: React.FC<MapaInterface> = ({
 
     estadoLayer.addTo(mapRef.current);
     estadoLayerRef.current = estadoLayer;
-  }, [geojsonData, estadoFiltrado]);
+  }, [geojsonEstados, estadoFiltrado, mapType]);
+
+  // Camada do bioma filtrado
+  useEffect(() => {
+    if (!mapRef.current || !geojsonBiomas) return;
+    if (biomaLayerRef.current) {
+      biomaLayerRef.current.remove();
+      biomaLayerRef.current = null;
+    }
+    if (!biomaFiltrado || mapType !== 'bioma') return;
+
+    const biomaLayer = L.geoJSON(geojsonBiomas, {
+      style: (feature?: GeoJSON.Feature) => {
+        const props = feature?.properties as any;
+        const isSelected =
+          biomaFiltrado &&
+          props &&
+          (
+            props.bioma === biomaFiltrado ||
+            props.name === biomaFiltrado ||
+            props.NOME === biomaFiltrado
+          );
+        return {
+          color: isSelected ? '#1b5e20' : '#43a047',
+          weight: isSelected ? 3.5 : 1.5,
+          fillColor: isSelected ? '#a5d6a7' : 'transparent',
+          fillOpacity: isSelected ? 0.18 : 0,
+          opacity: isSelected ? 0.95 : 0.5,
+          dashArray: isSelected ? '2,7' : '2,12',
+        };
+      },
+      filter: feature => {
+        if (!biomaFiltrado) return false;
+        const props = feature?.properties as any;
+        return (
+          props &&
+          (
+            props.bioma === biomaFiltrado ||
+            props.name === biomaFiltrado ||
+            props.NOME === biomaFiltrado
+          )
+        );
+      },
+      onEachFeature: (feature, layer) => {
+        const props = feature?.properties as any;
+        if (props && (props.bioma || props.name)) {
+          layer.bindPopup(props.bioma || props.name);
+        }
+      },
+    });
+
+    biomaLayer.addTo(mapRef.current);
+    biomaLayerRef.current = biomaLayer;
+  }, [geojsonBiomas, biomaFiltrado, mapType]);
 
   const handleFilterApply = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    setEstadoFiltrado(estado); // Só agora aplicamos o filtro
+    setEstadoFiltrado(mapType === 'estado' ? estado : '');
+    setBiomaFiltrado(mapType === 'bioma' ? bioma : '');
 
     if (mapRef.current) {
       if (mapType === 'estado' && estado && ESTADO_CENTERS[estado]) {
-        mapRef.current.setView(ESTADO_CENTERS[estado], 7); // zoom mais próximo
+        mapRef.current.setView(ESTADO_CENTERS[estado], 7);
       } else if (mapType === 'bioma' && bioma && BIOMA_CENTERS[bioma]) {
         mapRef.current.setView(BIOMA_CENTERS[bioma], 5);
       }
     }
-
-    console.log('Filtros aplicados:', { mapType, dataType, estado, cidade, bioma });
   };
 
   return (
