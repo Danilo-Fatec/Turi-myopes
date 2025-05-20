@@ -1,9 +1,8 @@
 import { LatLngExpression } from "leaflet";
 
-// Cada bioma deve ter seu polígono aproximado. Exemplo com coordenadas fictícias e simplificadas:
 export const BIOMAS_GEOJSON: Record<string, LatLngExpression[][]> = {
   "Amazônia": [
-    [ // Array de pontos do polígono
+    [ 
       [-7.0, -73.0], [-2.0, -58.0], [-4.0, -51.0], [-9.0, -51.0], [-11.0, -63.0], [-7.0, -73.0]
     ]
   ],

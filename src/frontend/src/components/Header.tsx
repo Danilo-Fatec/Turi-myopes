@@ -18,7 +18,9 @@ const Header: React.FC<HeaderProps> = ({ showTab, theme, toggleTheme }) => {
   return (
     <header className={styles.header}>
       <div className={styles.logo}>
-        <img src="./img/unnamed.png" alt="Turi Logo" />
+        <Link to="/">
+          <img src="./img/unnamed.png" alt="Turi Logo" />
+        </Link>
       </div>
       <button className={styles.hamburger} onClick={toggleMenu}>
         &#9776; 

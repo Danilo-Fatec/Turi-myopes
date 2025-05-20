@@ -11,20 +11,22 @@
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); 
-  gap: 1.5rem; 
-  justify-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 1.5rem;
 }
 
 .card {
   background-color: rgba(85, 84, 84, 0.11);
-  padding: 2rem;
+  padding: 5rem;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
   transition: transform 0.2s, box-shadow 0.2s;
-  width: 300px;
+  width: 500px;
+  height: 150px;
 }
 
 .card:hover {
