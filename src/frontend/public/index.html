@@ -10,14 +10,22 @@
       content="Web site created using create-react-app"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-   
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
- 
     <title>Myopes</title>
+   
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('theme');
+          if (theme === 'dark' || theme === 'light') {
+            document.documentElement.setAttribute('data-theme', theme);
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    
   </body>
 </html>

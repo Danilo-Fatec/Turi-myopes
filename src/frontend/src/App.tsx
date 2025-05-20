@@ -6,21 +6,11 @@ import AppRoutes from './routes/routes';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('inicio');
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-
-  
-  useEffect(() => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
-    if (saved === 'dark' || saved === 'light') {
-      setTheme(saved);
-      document.documentElement.setAttribute('data-theme', saved);
-    } else {
-      setTheme('light');
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-  }, []);
+    return saved === 'dark' || saved === 'light' ? saved : 'light';
+  });
 
- 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
