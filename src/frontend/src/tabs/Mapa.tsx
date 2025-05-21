@@ -5,6 +5,7 @@ import styles from '../Styles/Mapa.module.css';
 import MapaInterface from '../interfaces/mapaInterface';
 import { ESTADOS_BRASIL, BIOMAS_BRASIL } from '../constants/mapFilters';
 import { ESTADO_CENTERS, BIOMA_CENTERS } from '../constants/mapCenters';
+import BIOME_FAUNA_COLORS from '../constants/biomeColors';
 
 const Mapa: React.FC<MapaInterface> = ({
   focosDeCalor = false,
@@ -89,9 +90,15 @@ const Mapa: React.FC<MapaInterface> = ({
     });
     brasilLayer.addTo(mapRef.current);
     brasilLayerRef.current = brasilLayer;
+
+    // Ajusta o mapa para os estados
+    if (brasilLayer.getLayers().length > 0 && brasilLayer.getBounds().isValid()) {
+      mapRef.current.fitBounds(brasilLayer.getBounds());
+    }
+
   }, [geojsonEstados, mapType]);
 
-  // Camada permanente: contorno dos biomas
+  // Camada permanente: contorno dos biomas (com cor por fauna)
   useEffect(() => {
     if (!mapRef.current || !geojsonBiomas) return;
 
@@ -103,18 +110,35 @@ const Mapa: React.FC<MapaInterface> = ({
     // Só adiciona camada de biomas se modo "bioma" estiver ativo
     if (mapType !== 'bioma') return;
 
-    const biomasLayer = L.geoJSON(geojsonBiomas, {
-      style: {
-        color: '#43a047', // verde
+    const biomeStyle = (feature?: GeoJSON.Feature) => {
+      const props = feature?.properties as any;
+      const biomeName =
+        props?.bioma ||
+        props?.name ||
+        props?.NOME ||
+        "";
+
+      return {
+        color: BIOME_FAUNA_COLORS[biomeName] || '#1976d2', // cor de borda
         weight: 2,
         fillColor: 'transparent',
         fillOpacity: 0,
-        opacity: 0.7,
-      },
+        opacity: 0.8,
+      };
+    };
+
+    const biomasLayer = L.geoJSON(geojsonBiomas, {
+      style: biomeStyle,
       interactive: false
     });
     biomasLayer.addTo(mapRef.current);
     biomasLayerRef.current = biomasLayer;
+
+    // Ajusta o mapa para os limites do novo GeoJSON de biomas
+    if (biomasLayer.getLayers().length > 0 && biomasLayer.getBounds().isValid()) {
+      mapRef.current.fitBounds(biomasLayer.getBounds());
+    }
+
   }, [geojsonBiomas, mapType]);
 
   // Camada do estado filtrado
@@ -170,9 +194,15 @@ const Mapa: React.FC<MapaInterface> = ({
 
     estadoLayer.addTo(mapRef.current);
     estadoLayerRef.current = estadoLayer;
+
+    // Ajusta o mapa para o estado filtrado
+    if (estadoLayer.getLayers().length > 0 && estadoLayer.getBounds().isValid()) {
+      mapRef.current.fitBounds(estadoLayer.getBounds());
+    }
+
   }, [geojsonEstados, estadoFiltrado, mapType]);
 
-  // Camada do bioma filtrado
+  // Camada do bioma filtrado (DESTACA usando a cor do bioma)
   useEffect(() => {
     if (!mapRef.current || !geojsonBiomas) return;
     if (biomaLayerRef.current) {
@@ -184,34 +214,33 @@ const Mapa: React.FC<MapaInterface> = ({
     const biomaLayer = L.geoJSON(geojsonBiomas, {
       style: (feature?: GeoJSON.Feature) => {
         const props = feature?.properties as any;
-        const isSelected =
-          biomaFiltrado &&
-          props &&
-          (
-            props.bioma === biomaFiltrado ||
-            props.name === biomaFiltrado ||
-            props.NOME === biomaFiltrado
-          );
+        const biomeName =
+          props?.bioma ||
+          props?.name ||
+          props?.NOME ||
+          "";
+
+        const isSelected = biomaFiltrado && biomeName === biomaFiltrado;
+        const mainColor = BIOME_FAUNA_COLORS[biomeName] || '#43a047';
+
         return {
-          color: isSelected ? '#1b5e20' : '#43a047',
-          weight: isSelected ? 3.5 : 1.5,
-          fillColor: isSelected ? '#a5d6a7' : 'transparent',
+          color: mainColor,
+          weight: isSelected ? 3.5 : 2,
+          fillColor: isSelected ? mainColor : 'transparent',
           fillOpacity: isSelected ? 0.18 : 0,
-          opacity: isSelected ? 0.95 : 0.5,
+          opacity: isSelected ? 0.95 : 0.7,
           dashArray: isSelected ? '2,7' : '2,12',
         };
       },
       filter: feature => {
         if (!biomaFiltrado) return false;
         const props = feature?.properties as any;
-        return (
-          props &&
-          (
-            props.bioma === biomaFiltrado ||
-            props.name === biomaFiltrado ||
-            props.NOME === biomaFiltrado
-          )
-        );
+        const biomeName =
+          props?.bioma ||
+          props?.name ||
+          props?.NOME ||
+          "";
+        return biomeName === biomaFiltrado;
       },
       onEachFeature: (feature, layer) => {
         const props = feature?.properties as any;
@@ -223,6 +252,12 @@ const Mapa: React.FC<MapaInterface> = ({
 
     biomaLayer.addTo(mapRef.current);
     biomaLayerRef.current = biomaLayer;
+
+    // Ajusta o mapa para o bioma filtrado
+    if (biomaLayer.getLayers().length > 0 && biomaLayer.getBounds().isValid()) {
+      mapRef.current.fitBounds(biomaLayer.getBounds());
+    }
+
   }, [geojsonBiomas, biomaFiltrado, mapType]);
 
   const handleFilterApply = (e?: React.FormEvent) => {
@@ -230,14 +265,7 @@ const Mapa: React.FC<MapaInterface> = ({
 
     setEstadoFiltrado(mapType === 'estado' ? estado : '');
     setBiomaFiltrado(mapType === 'bioma' ? bioma : '');
-
-    if (mapRef.current) {
-      if (mapType === 'estado' && estado && ESTADO_CENTERS[estado]) {
-        mapRef.current.setView(ESTADO_CENTERS[estado], 7);
-      } else if (mapType === 'bioma' && bioma && BIOMA_CENTERS[bioma]) {
-        mapRef.current.setView(BIOMA_CENTERS[bioma], 5);
-      }
-    }
+    // O ajuste do zoom agora é feito pelos hooks de efeito com fitBounds.
   };
 
   return (
