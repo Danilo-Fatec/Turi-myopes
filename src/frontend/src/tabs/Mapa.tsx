@@ -5,7 +5,6 @@ import styles from '../Styles/Mapa.module.css';
 import MapaInterface from '../interfaces/mapaInterface';
 import { ESTADOS_BRASIL, BIOMAS_BRASIL } from '../constants/mapFilters';
 import { ESTADO_CENTERS, BIOMA_CENTERS } from '../constants/mapCenters';
-import BIOME_FAUNA_COLORS from '../constants/biomeColors';
 
 const Mapa: React.FC<MapaInterface> = ({
   focosDeCalor = false,
@@ -14,18 +13,15 @@ const Mapa: React.FC<MapaInterface> = ({
 }) => {
   const mapRef = useRef<Map | null>(null);
 
-  // Layers refs
   const brasilLayerRef = useRef<L.GeoJSON | null>(null);
   const estadoLayerRef = useRef<L.GeoJSON | null>(null);
   const biomasLayerRef = useRef<L.GeoJSON | null>(null);
   const biomaLayerRef = useRef<L.GeoJSON | null>(null);
 
-  // GeoJSON states
   const [geojsonEstados, setGeojsonEstados] = useState<any>(null);
-  const [geojsonBiomas, setGeojsonBiomas] = useState<any>(null);
-  const [geojsonBiomasZoom, setGeojsonBiomasZoom] = useState<any>(null); // shape simplificado para zoom
+  const [geojsonBiomasLayer, setGeojsonBiomasLayer] = useState<any>(null);
+  const [geojsonBiomaFiltro, setGeojsonBiomaFiltro] = useState<any>(null);
 
-  // Filtros e controles
   const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
   const [dataType, setDataType] = useState<'focos' | 'riscos' | 'queimadas'>('focos');
   const [estado, setEstado] = useState<string>('');
@@ -37,11 +33,9 @@ const Mapa: React.FC<MapaInterface> = ({
   const [isRiscoDeFogo, setIsRiscoDeFogo] = useState<boolean>(riscoDeFogo);
   const [isAreasQueimadas, setIsAreasQueimadas] = useState<boolean>(areasQueimadas);
 
-  // Função de normalização para comparar strings de biomas de forma robusta
   const normalize = (str: string) =>
-    (str || "").normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-  // Inicialização do mapa
   useEffect(() => {
     if (mapRef.current === null) {
       const brazilBounds: L.LatLngBoundsExpression = [
@@ -61,20 +55,18 @@ const Mapa: React.FC<MapaInterface> = ({
     }
   }, []);
 
-  // Carrega os GeoJSONs
   useEffect(() => {
     fetch('/brazil-states.geojson')
       .then(res => res.json())
       .then(data => setGeojsonEstados(data));
     fetch('/brazil-biomes.geojson')
       .then(res => res.json())
-      .then(data => setGeojsonBiomas(data));
-    fetch('/biomas_padronizado.geojson') // shape simplificado para zoom
+      .then(data => setGeojsonBiomasLayer(data));
+    fetch('/bioma.geojson')
       .then(res => res.json())
-      .then(data => setGeojsonBiomasZoom(data));
+      .then(data => setGeojsonBiomaFiltro(data));
   }, []);
 
-  // Camada permanente: contorno dos estados
   useEffect(() => {
     if (!mapRef.current || !geojsonEstados) return;
 
@@ -83,7 +75,6 @@ const Mapa: React.FC<MapaInterface> = ({
       brasilLayerRef.current = null;
     }
 
-    // Só adiciona camada de estados se modo "estado" estiver ativo
     if (mapType !== 'estado') return;
 
     const brasilLayer = L.geoJSON(geojsonEstados, {
@@ -98,49 +89,32 @@ const Mapa: React.FC<MapaInterface> = ({
     });
     brasilLayer.addTo(mapRef.current);
     brasilLayerRef.current = brasilLayer;
-
-    // Ajusta o mapa para os estados
-    if (brasilLayer.getLayers().length > 0 && brasilLayer.getBounds().isValid()) {
-      mapRef.current.fitBounds(brasilLayer.getBounds());
-    }
   }, [geojsonEstados, mapType]);
 
-  // Camada dos biomas (permanente ou filtrada, conforme filtro)
   useEffect(() => {
-    if (!mapRef.current || !geojsonBiomas) return;
+    if (!mapRef.current || !geojsonBiomasLayer) return;
 
-    // Remove camadas antigas
     if (biomasLayerRef.current) {
       biomasLayerRef.current.remove();
       biomasLayerRef.current = null;
     }
-    if (biomaLayerRef.current) {
-      biomaLayerRef.current.remove();
-      biomaLayerRef.current = null;
-    }
 
-    // Sempre mostra todos os shapes detalhados dos biomas
-    const biomeStyle = (feature?: GeoJSON.Feature) => {
-      const props = feature?.properties as any;
-      const biomeName = props?.bioma || props?.name || props?.NOME || "";
-      return {
-        color: BIOME_FAUNA_COLORS[biomeName] || '#1976d2',
+    if (mapType !== 'bioma') return;
+
+    const biomasLayer = L.geoJSON(geojsonBiomasLayer, {
+      style: {
+        color: '#43a047',
         weight: 2,
         fillColor: 'transparent',
         fillOpacity: 0,
-        opacity: 0.8,
-      };
-    };
-
-    const biomasLayer = L.geoJSON(geojsonBiomas, {
-      style: biomeStyle,
+        opacity: 0.7,
+      },
       interactive: false
     });
     biomasLayer.addTo(mapRef.current);
     biomasLayerRef.current = biomasLayer;
-  }, [geojsonBiomas, mapType]);
+  }, [geojsonBiomasLayer, mapType]);
 
-  // Camada do estado filtrado
   useEffect(() => {
     if (!mapRef.current || !geojsonEstados) return;
     if (estadoLayerRef.current) {
@@ -193,43 +167,66 @@ const Mapa: React.FC<MapaInterface> = ({
 
     estadoLayer.addTo(mapRef.current);
     estadoLayerRef.current = estadoLayer;
-
-    // Ajusta o mapa para o estado filtrado
-    if (estadoLayer.getLayers().length > 0 && estadoLayer.getBounds().isValid()) {
-      mapRef.current.fitBounds(estadoLayer.getBounds());
-    }
   }, [geojsonEstados, estadoFiltrado, mapType]);
 
-  // Zoom no bioma simplificado apenas ao filtrar
   useEffect(() => {
-    if (
-      !mapRef.current ||
-      !geojsonBiomasZoom ||
-      mapType !== 'bioma' ||
-      !biomaFiltrado
-    ) return;
+    if (!mapRef.current || !geojsonBiomaFiltro) return;
+    if (biomaLayerRef.current) {
+      biomaLayerRef.current.remove();
+      biomaLayerRef.current = null;
+    }
+    if (!biomaFiltrado || mapType !== 'bioma') return;
 
-    // Busca o polígono simplificado do bioma filtrado
-    const featureFiltrada = geojsonBiomasZoom.features.find((feature: any) => {
+    const featuresFiltradas = geojsonBiomaFiltro.features.filter((feature: any) => {
       const props = feature.properties || {};
       const biomeName = props.bioma || props.name || props.NOME || "";
       return normalize(biomeName) === normalize(biomaFiltrado);
     });
-    if (featureFiltrada) {
-      const tempLayer = L.geoJSON(featureFiltrada);
-      if (tempLayer.getBounds().isValid()) {
-        mapRef.current.fitBounds(tempLayer.getBounds(), { maxZoom: 8 });
-      }
-      tempLayer.remove();
+    if (!featuresFiltradas.length) return;
+
+    const geojsonFiltrado = {
+      ...geojsonBiomaFiltro,
+      features: featuresFiltradas,
+    };
+
+    const biomaLayer = L.geoJSON(geojsonFiltrado, {
+      style: {
+        color: '#1b5e20',
+        weight: 3.5,
+        fillColor: '#a5d6a7',
+        fillOpacity: 0.18,
+        opacity: 0.95,
+        dashArray: '2,7',
+      },
+      onEachFeature: (feature, layer) => {
+        const props = feature?.properties as any;
+        if (props && (props.bioma || props.name)) {
+          layer.bindPopup(props.bioma || props.name);
+        }
+      },
+    });
+
+    biomaLayer.addTo(mapRef.current);
+    biomaLayerRef.current = biomaLayer;
+
+    if (biomaLayer.getLayers().length > 0 && biomaLayer.getBounds().isValid()) {
+      mapRef.current.fitBounds(biomaLayer.getBounds(), { maxZoom: 3 });
     }
-  }, [geojsonBiomasZoom, biomaFiltrado, mapType]);
+  }, [geojsonBiomaFiltro, biomaFiltrado, mapType]);
 
   const handleFilterApply = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     setEstadoFiltrado(mapType === 'estado' ? estado : '');
     setBiomaFiltrado(mapType === 'bioma' ? bioma : '');
-    // O ajuste do zoom agora é feito pelos hooks de efeito com fitBounds.
+
+    if (mapRef.current) {
+      if (mapType === 'estado' && estado && ESTADO_CENTERS[estado]) {
+        mapRef.current.setView(ESTADO_CENTERS[estado], 7);
+      } else if (mapType === 'bioma' && bioma && BIOMA_CENTERS[bioma]) {
+        mapRef.current.setView(BIOMA_CENTERS[bioma], 5);
+      }
+    }
   };
 
   return (
@@ -306,7 +303,6 @@ const Mapa: React.FC<MapaInterface> = ({
             </select>
             <select value={cidade} onChange={(e) => setCidade(e.target.value)}>
               <option value="">Cidade</option>
-              {/* Opções de cidade conforme estado selecionado */}
             </select>
           </div>
         )}
