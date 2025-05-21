@@ -210,7 +210,10 @@ const Mapa: React.FC<MapaInterface> = ({
     biomaLayerRef.current = biomaLayer;
 
     if (biomaLayer.getLayers().length > 0 && biomaLayer.getBounds().isValid()) {
-      mapRef.current.fitBounds(biomaLayer.getBounds(), { maxZoom: 3 });
+      const bounds = biomaLayer.getBounds();
+      mapRef.current.fitBounds(bounds);
+      const center = bounds.getCenter();
+      mapRef.current.setView(center, 15);
     }
   }, [geojsonBiomaFiltro, biomaFiltrado, mapType]);
 
