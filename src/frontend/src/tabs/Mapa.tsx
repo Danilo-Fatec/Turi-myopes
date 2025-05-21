@@ -14,7 +14,7 @@ const Mapa: React.FC<MapaInterface> = ({
 }) => {
   const mapRef = useRef<Map | null>(null);
 
-  // Layers
+  // Layers refs
   const brasilLayerRef = useRef<L.GeoJSON | null>(null);
   const estadoLayerRef = useRef<L.GeoJSON | null>(null);
   const biomasLayerRef = useRef<L.GeoJSON | null>(null);
@@ -23,6 +23,7 @@ const Mapa: React.FC<MapaInterface> = ({
   // GeoJSON states
   const [geojsonEstados, setGeojsonEstados] = useState<any>(null);
   const [geojsonBiomas, setGeojsonBiomas] = useState<any>(null);
+  const [geojsonBiomasZoom, setGeojsonBiomasZoom] = useState<any>(null); // shape simplificado para zoom
 
   // Filtros e controles
   const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
@@ -35,6 +36,10 @@ const Mapa: React.FC<MapaInterface> = ({
   const [isFocosDeCalor, setIsFocosDeCalor] = useState<boolean>(focosDeCalor);
   const [isRiscoDeFogo, setIsRiscoDeFogo] = useState<boolean>(riscoDeFogo);
   const [isAreasQueimadas, setIsAreasQueimadas] = useState<boolean>(areasQueimadas);
+
+  // Função de normalização para comparar strings de biomas de forma robusta
+  const normalize = (str: string) =>
+    (str || "").normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
   // Inicialização do mapa
   useEffect(() => {
@@ -64,6 +69,9 @@ const Mapa: React.FC<MapaInterface> = ({
     fetch('/brazil-biomes.geojson')
       .then(res => res.json())
       .then(data => setGeojsonBiomas(data));
+    fetch('/biomas_padronizado.geojson') // shape simplificado para zoom
+      .then(res => res.json())
+      .then(data => setGeojsonBiomasZoom(data));
   }, []);
 
   // Camada permanente: contorno dos estados
@@ -95,31 +103,28 @@ const Mapa: React.FC<MapaInterface> = ({
     if (brasilLayer.getLayers().length > 0 && brasilLayer.getBounds().isValid()) {
       mapRef.current.fitBounds(brasilLayer.getBounds());
     }
-
   }, [geojsonEstados, mapType]);
 
-  // Camada permanente: contorno dos biomas (com cor por fauna)
+  // Camada dos biomas (permanente ou filtrada, conforme filtro)
   useEffect(() => {
     if (!mapRef.current || !geojsonBiomas) return;
 
+    // Remove camadas antigas
     if (biomasLayerRef.current) {
       biomasLayerRef.current.remove();
       biomasLayerRef.current = null;
     }
+    if (biomaLayerRef.current) {
+      biomaLayerRef.current.remove();
+      biomaLayerRef.current = null;
+    }
 
-    // Só adiciona camada de biomas se modo "bioma" estiver ativo
-    if (mapType !== 'bioma') return;
-
+    // Sempre mostra todos os shapes detalhados dos biomas
     const biomeStyle = (feature?: GeoJSON.Feature) => {
       const props = feature?.properties as any;
-      const biomeName =
-        props?.bioma ||
-        props?.name ||
-        props?.NOME ||
-        "";
-
+      const biomeName = props?.bioma || props?.name || props?.NOME || "";
       return {
-        color: BIOME_FAUNA_COLORS[biomeName] || '#1976d2', // cor de borda
+        color: BIOME_FAUNA_COLORS[biomeName] || '#1976d2',
         weight: 2,
         fillColor: 'transparent',
         fillOpacity: 0,
@@ -133,12 +138,6 @@ const Mapa: React.FC<MapaInterface> = ({
     });
     biomasLayer.addTo(mapRef.current);
     biomasLayerRef.current = biomasLayer;
-
-    // Ajusta o mapa para os limites do novo GeoJSON de biomas
-    if (biomasLayer.getLayers().length > 0 && biomasLayer.getBounds().isValid()) {
-      mapRef.current.fitBounds(biomasLayer.getBounds());
-    }
-
   }, [geojsonBiomas, mapType]);
 
   // Camada do estado filtrado
@@ -199,66 +198,31 @@ const Mapa: React.FC<MapaInterface> = ({
     if (estadoLayer.getLayers().length > 0 && estadoLayer.getBounds().isValid()) {
       mapRef.current.fitBounds(estadoLayer.getBounds());
     }
-
   }, [geojsonEstados, estadoFiltrado, mapType]);
 
-  // Camada do bioma filtrado (DESTACA usando a cor do bioma)
+  // Zoom no bioma simplificado apenas ao filtrar
   useEffect(() => {
-    if (!mapRef.current || !geojsonBiomas) return;
-    if (biomaLayerRef.current) {
-      biomaLayerRef.current.remove();
-      biomaLayerRef.current = null;
-    }
-    if (!biomaFiltrado || mapType !== 'bioma') return;
+    if (
+      !mapRef.current ||
+      !geojsonBiomasZoom ||
+      mapType !== 'bioma' ||
+      !biomaFiltrado
+    ) return;
 
-    const biomaLayer = L.geoJSON(geojsonBiomas, {
-      style: (feature?: GeoJSON.Feature) => {
-        const props = feature?.properties as any;
-        const biomeName =
-          props?.bioma ||
-          props?.name ||
-          props?.NOME ||
-          "";
-
-        const isSelected = biomaFiltrado && biomeName === biomaFiltrado;
-        const mainColor = BIOME_FAUNA_COLORS[biomeName] || '#43a047';
-
-        return {
-          color: mainColor,
-          weight: isSelected ? 3.5 : 2,
-          fillColor: isSelected ? mainColor : 'transparent',
-          fillOpacity: isSelected ? 0.18 : 0,
-          opacity: isSelected ? 0.95 : 0.7,
-          dashArray: isSelected ? '2,7' : '2,12',
-        };
-      },
-      filter: feature => {
-        if (!biomaFiltrado) return false;
-        const props = feature?.properties as any;
-        const biomeName =
-          props?.bioma ||
-          props?.name ||
-          props?.NOME ||
-          "";
-        return biomeName === biomaFiltrado;
-      },
-      onEachFeature: (feature, layer) => {
-        const props = feature?.properties as any;
-        if (props && (props.bioma || props.name)) {
-          layer.bindPopup(props.bioma || props.name);
-        }
-      },
+    // Busca o polígono simplificado do bioma filtrado
+    const featureFiltrada = geojsonBiomasZoom.features.find((feature: any) => {
+      const props = feature.properties || {};
+      const biomeName = props.bioma || props.name || props.NOME || "";
+      return normalize(biomeName) === normalize(biomaFiltrado);
     });
-
-    biomaLayer.addTo(mapRef.current);
-    biomaLayerRef.current = biomaLayer;
-
-    // Ajusta o mapa para o bioma filtrado
-    if (biomaLayer.getLayers().length > 0 && biomaLayer.getBounds().isValid()) {
-      mapRef.current.fitBounds(biomaLayer.getBounds());
+    if (featureFiltrada) {
+      const tempLayer = L.geoJSON(featureFiltrada);
+      if (tempLayer.getBounds().isValid()) {
+        mapRef.current.fitBounds(tempLayer.getBounds(), { maxZoom: 8 });
+      }
+      tempLayer.remove();
     }
-
-  }, [geojsonBiomas, biomaFiltrado, mapType]);
+  }, [geojsonBiomasZoom, biomaFiltrado, mapType]);
 
   const handleFilterApply = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
