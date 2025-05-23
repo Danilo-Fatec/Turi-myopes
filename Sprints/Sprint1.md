@@ -9,13 +9,13 @@
 | Fazer um Protótipo do Site TURI no FIGMA                       | Concluido | 
 | Levantamento de requisitos Funcionais e não funcionais         | Concluido |
 | Criar Json para Gráfico - DOD                                  | Concluido | 
-| Aprovar tarefas                                                | Concluido |
-|                    | Concluido |
-|                    | Concluido |
-|                    | Concluido |
-|                    | Concluido |
-|                    | Concluido |
-|                    | Concluido |
+| Aprovar tarefas concluídas do Trello                           | Concluido |
+| Criar tela inicial                   | Concluido |
+| Definir cores - DOD                    | Concluido |
+| UML caso de uso DOD                   | Concluido |
+| Sprint Backlog - Sprint 1                   | Concluido |
+| Trello - Sprint 1                   | Concluido |
+| Criar componentes iniciais e estilização - DOR                   | Concluido |
 |                    | Concluido |
 |                    | Concluido |
 |                    | Concluido |
