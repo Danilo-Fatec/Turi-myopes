@@ -12,7 +12,10 @@
 | 🟢 outras |                    | Concluido |
 | 🟢 outras |                    | Concluido |
 
-![](sprint1_burndown.jpeg)
+# BURNDOWN SP1
+ <div align = center>
+ <img src="Sprints/Imagens Turi/burndown_finalsp1.PNG">
+ </div>
 
 Sprint Review:
 
