@@ -1,7 +1,7 @@
 | Prioridade |       Tarefa       |  Status  | 
 |------------|--------------------|----------|
-| 🔴 Alta   |                    | Concluido |
-| 🔴 Alta   |                    | Concluido |
+| 🔴 Alta   | Conectividade com o banco de dados | Concluido |
+| 🔴 Alta   | Definir rotas das páginas - DOR    | Concluido |
 | 🔴 Alta   |                    | Concluido |
 | 🟡 Media  |                    | Concluido |
 | 🟡 Media  |                    | Concluido |
