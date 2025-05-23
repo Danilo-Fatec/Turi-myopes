@@ -1,16 +1,25 @@
-| Prioridade |       Tarefa       |  Status  | 
-|------------|--------------------|----------|
-| 🔴 Alta   | Conectividade com o banco de dados | Concluido |
-| 🔴 Alta   | Definir rotas das páginas - DOR    | Concluido |
-| 🔴 Alta   |                    | Concluido |
-| 🟡 Media  |                    | Concluido |
-| 🟡 Media  |                    | Concluido |
-| 🔵 Baixa  |                    | Concluido |  
-| 🔵 Baixa  |                    | Concluido | 
-| 🟢 outras |                    | Concluido |
-| 🟢 outras |                    | Concluido | 
-| 🟢 outras |                    | Concluido |
-| 🟢 outras |                    | Concluido |
+|                             Tarefa                             |  Status   | 
+|----------------------------------------------------------------|-----------|
+| Conectividade com o banco de dados                             | Concluido |
+| Definir rotas das páginas - DOR                                | Concluido |
+| Logo clicável para que o usuário possa voltar a página inicial | Concluido |
+| Fazer diagrama da UML Caso de uso                              | Concluido |
+| Pesquisa para implementar banco de dados - DOR                 | Concluido |
+| Criação e organização do GitHub                                | Concluido |  
+| Fazer um Protótipo do Site TURI no FIGMA                       | Concluido | 
+| Levantamento de requisitos Funcionais e não funcionais         | Concluido |
+| Criar Json para Gráfico - DOD                                  | Concluido | 
+| Aprovar tarefas                                                | Concluido |
+|                    | Concluido |
+|                    | Concluido |
+|                    | Concluido |
+|                    | Concluido |
+|                    | Concluido |
+|                    | Concluido |
+|                    | Concluido |
+|                    | Concluido |
+|                    | Concluido |
+|                    | Concluido |
 
 # BURNDOWN SP1
  <div align = center>
