@@ -14,7 +14,7 @@
 
 # BURNDOWN SP1
  <div align = center>
- <img src="Sprints/Imagens Turi/burndown_finalsp1.PNG">
+ <img src="Imagens Turi/burndown_finalsp1.PNG">
  </div>
 
 Sprint Review:
