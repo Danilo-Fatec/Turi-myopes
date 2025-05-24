@@ -1,113 +1,87 @@
-// dataFetcher.ts
-import pool from './db';
+// src/dataFetcher.ts
+import { query } from './db';
 
-async function fetchFocosDeCalor(): Promise<any[]> {
-    console.log("Função fetchFocosDeCalor() foi chamada.");
+interface TopBottomResult {
+    label: string;
+    value: number;
+}
+
+/**
+ * Função genérica para buscar Top/Bottom Focos por uma categoria (estado ou bioma).
+ * Filtra por startDate e endDate.
+ * @param category 'estado' ou 'bioma'
+ * @param order 'ASC' para menor, 'DESC' para maior
+ * @param limit O número de resultados a retornar
+ * @param startDate Data de início do período (YYYY-MM-DD)
+ * @param endDate Data de fim do período (YYYY-MM-DD)
+ * @returns Um array de objetos { label: string, value: number }
+ */
+export async function fetchTopBottomFocosCount(
+    category: 'estado' | 'bioma',
+    order: 'ASC' | 'DESC',
+    limit: number,
+    startDate: string,
+    endDate: string
+): Promise<TopBottomResult[]> {
+    console.log(`Função fetchTopBottomFocosCount() chamada para ${category}, ${order}, ${limit}, período ${startDate} a ${endDate}.`);
+
+    // Geração dinâmica das partes UNION ALL para os anos 2023, 2024, 2025
+    // Adicione ou remova anos aqui conforme a disponibilidade das suas tabelas de dados de satélite.
+    const years = [2023, 2024, 2025];
+    const unionParts = years.map(year => {
+        // Usa data_pas para 2023/2024 e data_hora_gmt para 2025, conforme sua query original.
+        const dateColumn = (year === 2025) ? 'data_hora_gmt' : 'data_pas';
+        return `
+            SELECT
+                ${category} AS category_label,
+                ${dateColumn} AS data_evento
+            FROM "dados_satelite_${year}"
+            WHERE ${category} IS NOT NULL
+            AND risco_fogo IS NOT NULL -- Mantido, embora focos não dependa estritamente de risco_fogo para contagem
+            AND ${dateColumn} BETWEEN $1 AND $2
+        `;
+    }).join('\nUNION ALL\n');
+
+    const sql = `
+        SELECT
+            category_label AS label,
+            COUNT(*) AS value
+        FROM (
+            ${unionParts}
+        ) AS combined_data
+        GROUP BY category_label
+        ORDER BY value ${order}
+        LIMIT ${limit};
+    `;
+
     try {
-        const result = await pool.query('SELECT * FROM "dados_satelite"');
-        console.log("Resultado da consulta (fetchFocosDeCalor):", result);
-        console.log("Dados brutos (fetchFocosDeCalor):", result.rows);
-        return result.rows;
+        const result = await query(sql, [startDate, endDate]);
+        // Garante que o valor seja um número
+        return result.map(row => ({ label: String(row.label), value: parseInt(row.value, 10) }));
     } catch (error) {
-        console.error('Erro ao buscar dados (fetchFocosDeCalor):', error);
-        return [];
+        console.error(`Erro ao buscar Top/Bottom Focos por ${category}:`, error);
+        throw error;
     }
 }
 
-async function getFocosPorEstadoBiomaParaPizza(): Promise<any[]> {
-    console.log("Função getFocosPorEstadoBiomaParaPizza() foi chamada.");
-    try {
-        const result = await pool.query(`
-        SELECT estado, bioma, COUNT(*) AS total_focos
-        FROM "dados_satelite"
-        GROUP BY estado, bioma
-        ORDER BY total_focos DESC
-        LIMIT 10
-    `);
-        console.log("Resultado da consulta (estado/bioma):", result);
-        console.log("Dados brutos (estado/bioma):", result.rows);
-        const formattedData = result.rows.map(row => ({
-            label: `${row.estado} - ${row.bioma}`,
-            value: parseInt(row.total_focos, 10)
-        }));
-        console.log("Dados formatados (estado/bioma):", formattedData);
-        return formattedData;
-    } catch (error) {
-        console.error('Erro ao buscar focos por estado e bioma:', error);
-        return [];
-    }
+// Funções para Estados
+export async function getTopStatesByFocoCount(limit: number, startDate: string, endDate: string): Promise<TopBottomResult[]> {
+    console.log(`Chamada: getTopStatesByFocoCount(${limit}, ${startDate}, ${endDate})`);
+    return await fetchTopBottomFocosCount('estado', 'DESC', limit, startDate, endDate);
 }
 
-async function getFocosPorRiscoEstadoParaPizza(): Promise<any> {
-    console.log("Função getFocosPorRiscoEstadoParaPizza() foi chamada.");
-    try {
-        const result = await pool.query(`
-            SELECT estado, risco_fogo AS ricos_fogo, COUNT(*) AS total_focos
-            FROM "dados_satelite"
-            GROUP BY estado, risco_fogo
-            ORDER BY estado, total_focos DESC
-            LIMIT 10
-        `);
-        console.log("Resultado da consulta (risco/estado):", result);
-        console.log("Dados brutos (risco/estado):", result.rows);
-        const formattedData: { [key: string]: { label: string; value: number }[] } = {};
-        result.rows.forEach(row => {
-            console.log("Processando linha (risco/estado):", row);
-            if (!formattedData[row.estado]) {
-                formattedData[row.estado] = [];
-                console.log(`Criando array para o estado (risco/estado): ${row.estado}`);
-            }
-            formattedData[row.estado].push({
-                label: row.ricos_fogo,
-                value: parseInt(row.total_focos, 10),
-            });
-            console.log(`Adicionando ao estado ${row.estado} (risco/estado): { label: ${row.ricos_fogo}, value: ${parseInt(row.total_focos, 10)} }`);
-        });
-        console.log("Dados formatados (risco/estado):", formattedData);
-        return formattedData;
-    } catch (error) {
-        console.error('Erro ao buscar focos por risco e estado:', error);
-        return {};
-    }
+export async function getBottomStatesByFocoCount(limit: number, startDate: string, endDate: string): Promise<TopBottomResult[]> {
+    console.log(`Chamada: getBottomStatesByFocoCount(${limit}, ${startDate}, ${endDate})`);
+    return await fetchTopBottomFocosCount('estado', 'ASC', limit, startDate, endDate);
 }
 
-// testando nova função
-
-async function getDadosFiltrados(
-    mapType: string,
-    dataType: string,
-    region: string
-): Promise<any[]> {
-    const categoriaColuna = mapType === 'estado' ? 'estado' : 'bioma'
-    const dadoColuna =
-        dataType === 'focos'
-            ? 'frp'
-            : dataType === 'riscos'
-                ? 'risco_fogo'
-                : 'precipitacao'
-
-  let query = `
-    SELECT 
-      ${categoriaColuna} AS categoria, 
-      AVG(${dadoColuna}) AS media
-    FROM dados_satelite
-    WHERE 1=1
-  `
-
-    if (region) query += ` AND ${mapType === 'estado' ? 'estado' : 'bioma'} = '${region}'`
-
-    query += ` GROUP BY categoria ORDER BY categoria`
-
-    try {
-        const result = await pool.query(query);
-        return result.rows.map(row => ({
-        label: row.categoria,
-        value: parseFloat(row.media),
-        }));
-    } catch (error) {
-        console.error('Erro ao executar a consulta:', error)
-        throw error
-    }
+// NOVAS FUNÇÕES PARA BIOMAS
+export async function getTopBiomasByFocoCount(limit: number, startDate: string, endDate: string): Promise<TopBottomResult[]> {
+    console.log(`Chamada: getTopBiomasByFocoCount(${limit}, ${startDate}, ${endDate})`);
+    return await fetchTopBottomFocosCount('bioma', 'DESC', limit, startDate, endDate);
 }
 
-export { fetchFocosDeCalor, getFocosPorEstadoBiomaParaPizza, getFocosPorRiscoEstadoParaPizza, getDadosFiltrados }
+export async function getBottomBiomasByFocoCount(limit: number, startDate: string, endDate: string): Promise<TopBottomResult[]> {
+    console.log(`Chamada: getBottomBiomasByFocoCount(${limit}, ${startDate}, ${endDate})`);
+    return await fetchTopBottomFocosCount('bioma', 'ASC', limit, startDate, endDate);
+}

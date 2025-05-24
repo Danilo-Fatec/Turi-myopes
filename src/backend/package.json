@@ -1,17 +1,30 @@
 {
+  "name": "seu-projeto",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "test": "ts-node src/testScript.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "pg": "^8.14.1"
+    "dotenv": "^16.5.0",
+    "express": "^4.18.2",
+    "pg": "^8.11.3"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.1",
-    "@types/pg": "^8.11.11",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
-  },
-  "scripts": {
-    "start": "ts-node src/server.ts"
+    "@types/cors": "^2.8.16",
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.8",
+    "@types/pg": "^8.10.9",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
   }
 }
