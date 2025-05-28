@@ -73,7 +73,7 @@ async function getFocosPorRiscoEstadoParaPizza(): Promise<any> {
 
 // testando nova função
 
-async function getDadosFiltrados(
+/* async function getDadosFiltrados(
     mapType: string,
     dataType: string,
     region: string
@@ -108,6 +108,17 @@ async function getDadosFiltrados(
         console.error('Erro ao executar a consulta:', error)
         throw error
     }
+} */
+
+export async function getDadosDia(): Promise<any[]> {
+    const query = `
+    SELECT id, lat, lon, estado, municipio, bioma, data_hora_gmt
+    FROM dados_satelite
+    WHERE data_hora_gmt::date = $1
+      AND lat IS NOT NULL AND lon IS NOT NULL
+  `;
+    const result = await pool.query(query);
+    return result.rows;
 }
 
-export { fetchFocosDeCalor, getFocosPorEstadoBiomaParaPizza, getFocosPorRiscoEstadoParaPizza, getDadosFiltrados }
+export { fetchFocosDeCalor, getFocosPorEstadoBiomaParaPizza, getFocosPorRiscoEstadoParaPizza/* , getDadosFiltrados  */ }

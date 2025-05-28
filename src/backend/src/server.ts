@@ -16,6 +16,7 @@ import { getRiscoDeFogoPorEstado,
 import { getAreasQueimadasPorEstado, 
     getAreasQueimadasPorBioma } 
     from './dataFetcher/areasQueimadas'
+import { getDadosDia } from './dataFetcher'
 
 
 const app = express()
@@ -51,6 +52,17 @@ app.get('/areas-estado', async (req, res) => {
 app.get('/areas-bioma', async (req, res) => {
   const data = await getAreasQueimadasPorBioma()
   res.json(data)
+})
+
+app.get('/dados-dia', async (req, res) => {
+  const { data } = req.query;
+  const result = await pool.query(`
+    SELECT id, lat, lon, estado, municipio, bioma, data_hora_gmt, risco_fogo, precipitacao, frp
+    FROM dados_satelite
+    WHERE data_hora_gmt::date = $1
+      AND lat IS NOT NULL AND lon IS NOT NULL
+  `, [data]);
+  res.json(result.rows);
 })
 
 app.listen(port, () => {

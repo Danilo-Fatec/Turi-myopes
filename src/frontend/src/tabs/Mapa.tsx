@@ -17,11 +17,13 @@ const Mapa: React.FC<MapaInterface> = ({
   const estadoLayerRef = useRef<L.GeoJSON | null>(null);
   const biomasLayerRef = useRef<L.GeoJSON | null>(null);
   const biomaLayerRef = useRef<L.GeoJSON | null>(null);
+  const leafletMarkersRef = useRef<L.Marker[]>([]);
 
   const [geojsonEstados, setGeojsonEstados] = useState<any>(null);
   const [geojsonBiomasLayer, setGeojsonBiomasLayer] = useState<any>(null);
   const [geojsonBiomaFiltro, setGeojsonBiomaFiltro] = useState<any>(null);
 
+  const [markers, setMarkers] = useState<{ geocode: [number, number]; popUp: string }[]>([])
   const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
   const [dataType, setDataType] = useState<'focos' | 'riscos' | 'queimadas'>('focos');
   const [estado, setEstado] = useState<string>('');
@@ -217,11 +219,90 @@ const Mapa: React.FC<MapaInterface> = ({
     }
   }, [geojsonBiomaFiltro, biomaFiltrado, mapType]);
 
-  const handleFilterApply = (e?: React.FormEvent) => {
+  async function fetchPontosPorData(data: string) {
+    const response = await fetch(`http://localhost:3000/dados-dia?data=${data}`)
+    console.log(response)
+    return await response.json()
+  }
+
+  // icone do marcador
+  const defaultIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  })
+
+  // useEffet para mudar marcadores para novos e/ou remover os antigos
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // para remover marcadores antigos
+    leafletMarkersRef.current.forEach(marker => marker.remove());
+    leafletMarkersRef.current = [];
+
+    // para adicionar novos marcadores
+    markers.forEach(({ geocode, popUp }) => {
+      const marker = L.marker(geocode, { icon: defaultIcon }).addTo(mapRef.current!)
+      if (popUp) marker.bindPopup(popUp)
+      leafletMarkersRef.current.push(marker)
+    })
+    console.log('Markers atualizados:', markers)
+  }, [markers])
+
+  function filtrarPontos(
+    pontos: any[],
+    { estado, bioma, focosDeCalor, riscoDeFogo, areasQueimadas, mapType }: {
+      estado: string,
+      bioma: string,
+      focosDeCalor: boolean,
+      riscoDeFogo: boolean,
+      areasQueimadas: boolean,
+      mapType: 'estado' | 'bioma'
+    }
+  ) {
+    console.log('Filtros:', { estado, bioma, focosDeCalor, riscoDeFogo, areasQueimadas, mapType });
+    console.log('Primeiro ponto:', pontos[0]);
+    return pontos.filter((p: any) => {
+      let ok = true;
+      if (mapType === 'estado' && estado) ok = ok && String(p.estado).toUpperCase() === String(estado).toUpperCase()
+      if (mapType === 'bioma' && bioma) ok = ok && p.bioma === bioma;
+      if (focosDeCalor) ok = ok && Number(p.frp) > 0;
+      if (riscoDeFogo) ok = ok && Number(p.risco_fogo) > 0;
+      if (areasQueimadas) ok = ok && Number(p.precipitacao) > 0;
+      return ok;
+    });
+  }
+
+  const handleFilterApply = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     setEstadoFiltrado(mapType === 'estado' ? estado : '');
     setBiomaFiltrado(mapType === 'bioma' ? bioma : '');
+
+    const dataSelecionada = "2025-02-14"
+    const todosPontos = await fetchPontosPorData(dataSelecionada)
+    console.log('Pontos recebidos do backend:', todosPontos)
+
+    const pontosFiltrados = filtrarPontos(todosPontos, {
+      estado,
+      bioma,
+      focosDeCalor: dataType === 'focos',
+      riscoDeFogo: dataType === 'riscos',
+      areasQueimadas: dataType === 'queimadas',
+      mapType
+    });
+    console.log('Pontos após filtro:', pontosFiltrados)
+
+    const markersParaMapa = pontosFiltrados.map((item: any) => ({
+      geocode: [Number(item.lat), Number(item.lon)] as [number, number],
+      popUp: `${item.municipio || ''} - ${item.estado || ''} (${item.data_hora_gmt})`
+    }));
+    console.log('Markers para o mapa:', markersParaMapa);
+    setMarkers(markersParaMapa)
 
     if (mapRef.current) {
       if (mapType === 'estado' && estado && ESTADO_CENTERS[estado]) {
@@ -267,7 +348,7 @@ const Mapa: React.FC<MapaInterface> = ({
               type="radio"
               name="dataType"
               value="focos"
-              checked={isFocosDeCalor}
+              checked={dataType === 'focos'}
               onChange={() => setDataType('focos')}
             />
             Focos de Calor
@@ -277,7 +358,7 @@ const Mapa: React.FC<MapaInterface> = ({
               type="radio"
               name="dataType"
               value="riscos"
-              checked={isRiscoDeFogo}
+              checked={dataType === 'riscos'}
               onChange={() => setDataType('riscos')}
             />
             Riscos de Fogo
@@ -287,7 +368,7 @@ const Mapa: React.FC<MapaInterface> = ({
               type="radio"
               name="dataType"
               value="queimadas"
-              checked={isAreasQueimadas}
+              checked={dataType === 'queimadas'}
               onChange={() => setDataType('queimadas')}
             />
             Áreas Queimadas
