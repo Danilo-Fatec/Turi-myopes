@@ -3,8 +3,36 @@ import L, { Map } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styles from '../Styles/Mapa.module.css';
 import MapaInterface from '../interfaces/mapaInterface';
-import { ESTADOS_BRASIL, BIOMAS_BRASIL } from '../constants/mapFilters';
-import { ESTADO_CENTERS, BIOMA_CENTERS } from '../constants/mapCenters';
+import { ESTADOS_BRASIL } from '../constants/mapFilters';
+import { ESTADO_CENTERS } from '../constants/mapCenters';
+
+const BIOMAS_BRASIL = [
+  'Amazônia',
+  'Cerrado',
+  'Caatinga',
+  'Pampa',
+  'Pantanal',
+  'Mata Atlântica'
+];
+
+const BIOMA_FILES = [
+  { name: 'Amazônia', file: '/amazonia.geojson', color: '#388e3c' },
+  { name: 'Cerrado', file: '/cerrado.geojson', color: '#fbc02d' },
+  { name: 'Caatinga', file: '/caatinga.geojson', color: '#e65100' },
+  { name: 'Pampa', file: '/pampa.geojson', color: '#0288d1' },
+  { name: 'Pantanal', file: '/pantanal.geojson', color: '#8d6e63' },
+  { name: 'Mata Atlântica', file: '/mata_atlantica.geojson', color: '#43a047' }
+];
+
+// Para legenda e cor dos marcadores por bioma
+const BIOMA_COLORS: Record<string, string> = {
+  'Amazônia': '#388e3c',
+  'Cerrado': '#fbc02d',
+  'Caatinga': '#e65100',
+  'Pampa': '#0288d1',
+  'Pantanal': '#8d6e63',
+  'Mata Atlântica': '#43a047'
+};
 
 const Mapa: React.FC<MapaInterface> = ({
   focosDeCalor = false,
@@ -15,29 +43,147 @@ const Mapa: React.FC<MapaInterface> = ({
 
   const brasilLayerRef = useRef<L.GeoJSON | null>(null);
   const estadoLayerRef = useRef<L.GeoJSON | null>(null);
-  const biomasLayerRef = useRef<L.GeoJSON | null>(null);
-  const biomaLayerRef = useRef<L.GeoJSON | null>(null);
+  const biomasLayerRefs = useRef<{ [key: string]: L.GeoJSON | null }>({});
   const leafletMarkersRef = useRef<L.Marker[]>([]);
 
   const [geojsonEstados, setGeojsonEstados] = useState<any>(null);
-  const [geojsonBiomasLayer, setGeojsonBiomasLayer] = useState<any>(null);
-  const [geojsonBiomaFiltro, setGeojsonBiomaFiltro] = useState<any>(null);
+  const [biomasGeojsons, setBiomasGeojsons] = useState<{ [bioma: string]: any }>({});
 
-  const [markers, setMarkers] = useState<{ geocode: [number, number]; popUp: string }[]>([])
   const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
   const [dataType, setDataType] = useState<'focos' | 'riscos' | 'queimadas'>('focos');
   const [estado, setEstado] = useState<string>('');
   const [estadoFiltrado, setEstadoFiltrado] = useState<string>('');
   const [bioma, setBioma] = useState<string>('');
   const [biomaFiltrado, setBiomaFiltrado] = useState<string>('');
-  const [cidade, setCidade] = useState<string>('');
   const [isFocosDeCalor, setIsFocosDeCalor] = useState<boolean>(focosDeCalor);
   const [isRiscoDeFogo, setIsRiscoDeFogo] = useState<boolean>(riscoDeFogo);
   const [isAreasQueimadas, setIsAreasQueimadas] = useState<boolean>(areasQueimadas);
 
-  const normalize = (str: string) =>
-    (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const [markers, setMarkers] = useState<{ geocode: [number, number]; popUp: string }[]>([]);
 
+  useEffect(() => {
+    fetch('/brazil-states.geojson')
+      .then(res => res.json())
+      .then(data => setGeojsonEstados(data));
+
+    BIOMA_FILES.forEach(({ name, file }) => {
+      fetch(file)
+        .then(res => res.json())
+        .then(data => {
+          setBiomasGeojsons(prev => ({ ...prev, [name]: data }));
+        });
+    });
+  }, []);
+
+  // Estados layer
+  useEffect(() => {
+    if (!mapRef.current || !geojsonEstados) return;
+
+    if (brasilLayerRef.current) {
+      brasilLayerRef.current.remove();
+      brasilLayerRef.current = null;
+    }
+    if (estadoLayerRef.current) {
+      estadoLayerRef.current.remove();
+      estadoLayerRef.current = null;
+    }
+
+    if (mapType !== 'estado') return;
+
+    const brasilLayer = L.geoJSON(geojsonEstados, {
+      style: {
+        color: '#000',
+        weight: 1.8,
+        fillColor: 'transparent',
+        fillOpacity: 0,
+        opacity: 1,
+      },
+      interactive: false
+    });
+    brasilLayer.addTo(mapRef.current);
+    brasilLayerRef.current = brasilLayer;
+
+    if (estadoFiltrado) {
+      const estadoLayer = L.geoJSON(geojsonEstados, {
+        filter: feature => {
+          const props = feature?.properties as any;
+          return (
+            props &&
+            (
+              props.name === estadoFiltrado ||
+              props.sigla === estadoFiltrado ||
+              props.NOME === estadoFiltrado ||
+              props.UF === estadoFiltrado
+            )
+          );
+        },
+        style: {
+          color: '#1976d2',
+          weight: 3,
+          fillColor: '#bbdefb',
+          fillOpacity: 0.18,
+          opacity: 0.9,
+        },
+        onEachFeature: (feature, layer) => {
+          const props = feature?.properties as any;
+          if (props && props.name) {
+            layer.bindPopup(props.name);
+          }
+        }
+      });
+      estadoLayer.addTo(mapRef.current);
+      estadoLayerRef.current = estadoLayer;
+    }
+  }, [geojsonEstados, mapType, estadoFiltrado]);
+
+  // Biomas layer (um ou todos)
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    Object.values(biomasLayerRefs.current).forEach(layer => {
+      if (layer) {
+        layer.remove();
+      }
+    });
+    biomasLayerRefs.current = {};
+
+    if (mapType !== 'bioma') return;
+
+    BIOMA_FILES.forEach(({ name, color }) => {
+      const geojson = biomasGeojsons[name];
+      if (!geojson) return;
+
+      if (biomaFiltrado && biomaFiltrado !== name) return;
+
+      const layer = L.geoJSON(geojson, {
+        style: {
+          color,
+          weight: 2.5,
+          fillOpacity: 0.15,
+          opacity: 0.9,
+        },
+        onEachFeature: (feature, lyr) => {
+          lyr.bindPopup(name);
+        },
+      });
+      layer.addTo(mapRef.current!);
+      biomasLayerRefs.current[name] = layer;
+    });
+
+    if (
+      mapType === 'bioma' &&
+      biomaFiltrado &&
+      biomasLayerRefs.current[biomaFiltrado]
+    ) {
+      const layer = biomasLayerRefs.current[biomaFiltrado];
+      const bounds = layer!.getBounds();
+      if (bounds.isValid()) {
+        mapRef.current!.fitBounds(bounds, { maxZoom: 6 });
+      }
+    }
+  }, [biomasGeojsons, mapType, biomaFiltrado]);
+
+  // Inicializa o mapa
   useEffect(() => {
     if (mapRef.current === null) {
       const brazilBounds: L.LatLngBoundsExpression = [
@@ -57,175 +203,7 @@ const Mapa: React.FC<MapaInterface> = ({
     }
   }, []);
 
-  useEffect(() => {
-    fetch('/brazil-states.geojson')
-      .then(res => res.json())
-      .then(data => setGeojsonEstados(data));
-    fetch('/brazil-biomes.geojson')
-      .then(res => res.json())
-      .then(data => setGeojsonBiomasLayer(data));
-    fetch('/bioma.geojson')
-      .then(res => res.json())
-      .then(data => setGeojsonBiomaFiltro(data));
-  }, []);
-
-  useEffect(() => {
-    if (!mapRef.current || !geojsonEstados) return;
-
-    if (brasilLayerRef.current) {
-      brasilLayerRef.current.remove();
-      brasilLayerRef.current = null;
-    }
-
-    if (mapType !== 'estado') return;
-
-    const brasilLayer = L.geoJSON(geojsonEstados, {
-      style: {
-        color: '#bdbdbd',
-        weight: 1.5,
-        fillColor: 'transparent',
-        fillOpacity: 0,
-        opacity: 0.8,
-      },
-      interactive: false
-    });
-    brasilLayer.addTo(mapRef.current);
-    brasilLayerRef.current = brasilLayer;
-  }, [geojsonEstados, mapType]);
-
-  useEffect(() => {
-    if (!mapRef.current || !geojsonBiomasLayer) return;
-
-    if (biomasLayerRef.current) {
-      biomasLayerRef.current.remove();
-      biomasLayerRef.current = null;
-    }
-
-    if (mapType !== 'bioma') return;
-
-    const biomasLayer = L.geoJSON(geojsonBiomasLayer, {
-      style: {
-        color: '#43a047',
-        weight: 2,
-        fillColor: 'transparent',
-        fillOpacity: 0,
-        opacity: 0.7,
-      },
-      interactive: false
-    });
-    biomasLayer.addTo(mapRef.current);
-    biomasLayerRef.current = biomasLayer;
-  }, [geojsonBiomasLayer, mapType]);
-
-  useEffect(() => {
-    if (!mapRef.current || !geojsonEstados) return;
-    if (estadoLayerRef.current) {
-      estadoLayerRef.current.remove();
-      estadoLayerRef.current = null;
-    }
-    if (!estadoFiltrado || mapType !== 'estado') return;
-
-    const estadoLayer = L.geoJSON(geojsonEstados, {
-      style: (feature?: GeoJSON.Feature) => {
-        const props = feature?.properties as any;
-        const isSelected =
-          estadoFiltrado &&
-          props &&
-          (
-            props.name === estadoFiltrado ||
-            props.sigla === estadoFiltrado ||
-            props.NOME === estadoFiltrado ||
-            props.UF === estadoFiltrado
-          );
-        return {
-          color: isSelected ? '#1976d2' : '#bbb',
-          weight: isSelected ? 3 : 1,
-          fillColor: isSelected ? '#bbdefb' : 'transparent',
-          fillOpacity: isSelected ? 0.18 : 0,
-          opacity: isSelected ? 0.9 : 0.5,
-          dashArray: isSelected ? '3,8' : '2,10',
-        };
-      },
-      filter: feature => {
-        if (!estadoFiltrado) return false;
-        const props = feature?.properties as any;
-        return (
-          props &&
-          (
-            props.name === estadoFiltrado ||
-            props.sigla === estadoFiltrado ||
-            props.NOME === estadoFiltrado ||
-            props.UF === estadoFiltrado
-          )
-        );
-      },
-      onEachFeature: (feature, layer) => {
-        const props = feature?.properties as any;
-        if (props && props.name) {
-          layer.bindPopup(props.name);
-        }
-      },
-    });
-
-    estadoLayer.addTo(mapRef.current);
-    estadoLayerRef.current = estadoLayer;
-  }, [geojsonEstados, estadoFiltrado, mapType]);
-
-  useEffect(() => {
-    if (!mapRef.current || !geojsonBiomaFiltro) return;
-    if (biomaLayerRef.current) {
-      biomaLayerRef.current.remove();
-      biomaLayerRef.current = null;
-    }
-    if (!biomaFiltrado || mapType !== 'bioma') return;
-
-    const featuresFiltradas = geojsonBiomaFiltro.features.filter((feature: any) => {
-      const props = feature.properties || {};
-      const biomeName = props.bioma || props.name || props.NOME || "";
-      return normalize(biomeName) === normalize(biomaFiltrado);
-    });
-    if (!featuresFiltradas.length) return;
-
-    const geojsonFiltrado = {
-      ...geojsonBiomaFiltro,
-      features: featuresFiltradas,
-    };
-
-    const biomaLayer = L.geoJSON(geojsonFiltrado, {
-      style: {
-        color: '#1b5e20',
-        weight: 3.5,
-        fillColor: '#a5d6a7',
-        fillOpacity: 0.18,
-        opacity: 0.95,
-        dashArray: '2,7',
-      },
-      onEachFeature: (feature, layer) => {
-        const props = feature?.properties as any;
-        if (props && (props.bioma || props.name)) {
-          layer.bindPopup(props.bioma || props.name);
-        }
-      },
-    });
-
-    biomaLayer.addTo(mapRef.current);
-    biomaLayerRef.current = biomaLayer;
-
-    if (biomaLayer.getLayers().length > 0 && biomaLayer.getBounds().isValid()) {
-      const bounds = biomaLayer.getBounds();
-      mapRef.current.fitBounds(bounds);
-      const center = bounds.getCenter();
-      mapRef.current.setView(center, 15);
-    }
-  }, [geojsonBiomaFiltro, biomaFiltrado, mapType]);
-
-  async function fetchPontosPorData(data: string) {
-    const response = await fetch(`http://localhost:3000/dados-dia?data=${data}`)
-    console.log(response)
-    return await response.json()
-  }
-
-  // icone do marcador
+  // --- Marcadores ---
   const defaultIcon = L.icon({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -234,25 +212,28 @@ const Mapa: React.FC<MapaInterface> = ({
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
     shadowSize: [41, 41]
-  })
+  });
 
-  // useEffet para mudar marcadores para novos e/ou remover os antigos
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // para remover marcadores antigos
     leafletMarkersRef.current.forEach(marker => marker.remove());
     leafletMarkersRef.current = [];
 
-    // para adicionar novos marcadores
     markers.forEach(({ geocode, popUp }) => {
       const marker = L.marker(geocode, { icon: defaultIcon }).addTo(mapRef.current!)
       if (popUp) marker.bindPopup(popUp)
       leafletMarkersRef.current.push(marker)
     })
-    console.log('Markers atualizados:', markers)
-  }, [markers])
+  }, [markers]);
 
+  // --- Backend fetch dos pontos ---
+  async function fetchPontosPorData(data: string) {
+    const response = await fetch(`http://localhost:3000/dados-dia?data=${data}`)
+    return await response.json()
+  }
+
+  // --- Filtro dos pontos ---
   function filtrarPontos(
     pontos: any[],
     { estado, bioma, focosDeCalor, riscoDeFogo, areasQueimadas, mapType }: {
@@ -264,8 +245,6 @@ const Mapa: React.FC<MapaInterface> = ({
       mapType: 'estado' | 'bioma'
     }
   ) {
-    console.log('Filtros:', { estado, bioma, focosDeCalor, riscoDeFogo, areasQueimadas, mapType });
-    console.log('Primeiro ponto:', pontos[0]);
     return pontos.filter((p: any) => {
       let ok = true;
       if (mapType === 'estado' && estado) ok = ok && String(p.estado).toUpperCase() === String(estado).toUpperCase()
@@ -277,15 +256,16 @@ const Mapa: React.FC<MapaInterface> = ({
     });
   }
 
+  // --- Handler do filtro ---
   const handleFilterApply = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     setEstadoFiltrado(mapType === 'estado' ? estado : '');
     setBiomaFiltrado(mapType === 'bioma' ? bioma : '');
 
+    // Exemplo de data fixa, ajuste para seu caso!
     const dataSelecionada = "2025-02-14"
     const todosPontos = await fetchPontosPorData(dataSelecionada)
-    console.log('Pontos recebidos do backend:', todosPontos)
 
     const pontosFiltrados = filtrarPontos(todosPontos, {
       estado,
@@ -295,21 +275,15 @@ const Mapa: React.FC<MapaInterface> = ({
       areasQueimadas: dataType === 'queimadas',
       mapType
     });
-    console.log('Pontos após filtro:', pontosFiltrados)
 
     const markersParaMapa = pontosFiltrados.map((item: any) => ({
       geocode: [Number(item.lat), Number(item.lon)] as [number, number],
       popUp: `${item.municipio || ''} - ${item.estado || ''} (${item.data_hora_gmt})`
     }));
-    console.log('Markers para o mapa:', markersParaMapa);
-    setMarkers(markersParaMapa)
+    setMarkers(markersParaMapa);
 
-    if (mapRef.current) {
-      if (mapType === 'estado' && estado && ESTADO_CENTERS[estado]) {
-        mapRef.current.setView(ESTADO_CENTERS[estado], 7);
-      } else if (mapType === 'bioma' && bioma && BIOMA_CENTERS[bioma]) {
-        mapRef.current.setView(BIOMA_CENTERS[bioma], 5);
-      }
+    if (mapRef.current && mapType === 'estado' && estado && ESTADO_CENTERS[estado]) {
+      mapRef.current.setView(ESTADO_CENTERS[estado], 7);
     }
   };
 
@@ -385,16 +359,13 @@ const Mapa: React.FC<MapaInterface> = ({
                 </option>
               ))}
             </select>
-            <select value={cidade} onChange={(e) => setCidade(e.target.value)}>
-              <option value="">Cidade</option>
-            </select>
           </div>
         )}
 
         {mapType === 'bioma' && (
           <div className={styles.selectGroup}>
-            <select value={bioma} onChange={(e) => setBioma(e.target.value)}>
-              <option value="">Bioma</option>
+            <select value={bioma} onChange={e => setBioma(e.target.value)}>
+              <option value="">Todos</option>
               {BIOMAS_BRASIL.map((b) => (
                 <option key={b} value={b}>
                   {b}
@@ -407,6 +378,25 @@ const Mapa: React.FC<MapaInterface> = ({
         <button className={styles.applyButton} type="submit">
           Ativar Filtros
         </button>
+
+        {mapType === 'bioma' && (
+          <div style={{ marginTop: "1rem", display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+            {BIOMA_FILES.map(({ name, color }) => (
+              <div key={name} style={{ display: "flex", alignItems: "center", minWidth: 140 }}>
+                <span style={{
+                  display: "inline-block",
+                  width: 20,
+                  height: 20,
+                  borderRadius: 4,
+                  marginRight: 8,
+                  background: color,
+                  border: "1.5px solid #333"
+                }} />
+                <span style={{ fontSize: 14 }}>{name}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </form>
 
       <div id="mapid" className={styles.map}></div>
