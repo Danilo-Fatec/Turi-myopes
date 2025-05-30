@@ -5,6 +5,7 @@ import styles from '../Styles/Mapa.module.css';
 import MapaInterface from '../interfaces/mapaInterface';
 import { ESTADOS_BRASIL } from '../constants/mapFilters';
 import { ESTADO_CENTERS } from '../constants/mapCenters';
+import 'leaflet.heat'
 
 const BIOMAS_BRASIL = [
   'Amazônia',
@@ -45,6 +46,7 @@ const Mapa: React.FC<MapaInterface> = ({
   const estadoLayerRef = useRef<L.GeoJSON | null>(null);
   const biomasLayerRefs = useRef<{ [key: string]: L.GeoJSON | null }>({});
   const leafletMarkersRef = useRef<L.Marker[]>([]);
+  const heatLayerRef = useRef<L.Layer | null>(null)
 
   const [geojsonEstados, setGeojsonEstados] = useState<any>(null);
   const [biomasGeojsons, setBiomasGeojsons] = useState<{ [bioma: string]: any }>({});
@@ -58,6 +60,7 @@ const Mapa: React.FC<MapaInterface> = ({
   const [isFocosDeCalor, setIsFocosDeCalor] = useState<boolean>(focosDeCalor);
   const [isRiscoDeFogo, setIsRiscoDeFogo] = useState<boolean>(riscoDeFogo);
   const [isAreasQueimadas, setIsAreasQueimadas] = useState<boolean>(areasQueimadas);
+  const [detailType, setDetailType] = useState<string>('marcadores')
 
   const [markers, setMarkers] = useState<{ geocode: [number, number]; popUp: string }[]>([]);
 
@@ -220,12 +223,68 @@ const Mapa: React.FC<MapaInterface> = ({
     leafletMarkersRef.current.forEach(marker => marker.remove());
     leafletMarkersRef.current = [];
 
-    markers.forEach(({ geocode, popUp }) => {
-      const marker = L.marker(geocode, { icon: defaultIcon }).addTo(mapRef.current!)
-      if (popUp) marker.bindPopup(popUp)
-      leafletMarkersRef.current.push(marker)
-    })
+      markers.forEach(({ geocode, popUp }) => {
+        const marker = L.marker(geocode, { icon: defaultIcon }).addTo(mapRef.current!)
+        if (popUp) marker.bindPopup(popUp)
+        leafletMarkersRef.current.push(marker)
+      })
   }, [markers]);
+
+  // --- heatmap ---
+  function atualizarHeatmap(markersParaMapa: { geocode: [number, number] }[]) {
+    if (!mapRef.current) return;
+
+    // debup
+    console.log('Markers para heatmap:', markersParaMapa)
+
+    // Remove heatmap antigo
+    if (heatLayerRef.current) {
+      mapRef.current.removeLayer(heatLayerRef.current);
+      heatLayerRef.current = null;
+    }
+
+    // Adiciona novo heatmap
+      const heatPoints = markersParaMapa.map(m => [
+        Number(m.geocode[0]),
+        Number(m.geocode[1]),
+        10
+      ]);
+      // debug
+      console.log('heatPoints para heatLayer:', heatPoints)
+      if (heatPoints.length > 0) {
+        const HeatLayer = (L as any).heatLayer
+        console.log('mapRef.current:', mapRef.current)
+        heatLayerRef.current = HeatLayer(heatPoints, {
+          radius: 15,
+          blur: 10,
+          maxZoom: 15,
+          minOpacity: 0.5,
+          gradient: {
+            0.4: 'blue',
+            0.6: 'cyan',
+            0.7: 'lime',
+            0.8: 'yellow',
+            1.0: 'red'
+          }
+        }).addTo(mapRef.current);
+      }
+  }
+
+  // limpar o heatmap
+  function limparHeatmap(){
+    if (heatLayerRef.current && mapRef.current){
+      mapRef.current.removeLayer(heatLayerRef.current)
+      heatLayerRef.current = null
+    }
+  }
+
+  // limpar marcadores
+  function limparMarcadores(){
+    if (leafletMarkersRef.current){
+      leafletMarkersRef.current.forEach(marker => marker.remove())
+      leafletMarkersRef.current = []
+    }
+  }
 
   // --- Backend fetch dos pontos ---
   async function fetchPontosPorData(data: string) {
@@ -280,7 +339,20 @@ const Mapa: React.FC<MapaInterface> = ({
       geocode: [Number(item.lat), Number(item.lon)] as [number, number],
       popUp: `${item.municipio || ''} - ${item.estado || ''} (${item.data_hora_gmt})`
     }));
-    setMarkers(markersParaMapa);
+
+    if (detailType === 'marcadores') {
+      limparHeatmap()  
+      limparMarcadores()
+      setMarkers(markersParaMapa)
+    }
+
+    if (detailType === 'calor'){
+      limparHeatmap()
+      limparMarcadores()
+      atualizarHeatmap(markersParaMapa)
+    }
+
+    console.log('Heatmap criado:', heatLayerRef.current)
 
     if (mapRef.current && mapType === 'estado' && estado && ESTADO_CENTERS[estado]) {
       mapRef.current.setView(ESTADO_CENTERS[estado], 7);
@@ -346,6 +418,30 @@ const Mapa: React.FC<MapaInterface> = ({
               onChange={() => setDataType('queimadas')}
             />
             Áreas Queimadas
+          </label>
+        </div>
+
+        <div className={styles.radioGroup}>
+          <p>Tipo de detalhes:</p>
+          <label>
+            <input
+              type="radio"
+              name="dataType"
+              value="focos"
+              checked={detailType === 'marcadores'}
+              onChange={() => setDetailType('marcadores')}
+            />
+            Marcadores
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="dataType"
+              value="riscos"
+              checked={detailType === 'calor'}
+              onChange={() => setDetailType('calor')}
+            />
+            Mapa de Calor
           </label>
         </div>
 
