@@ -3,6 +3,7 @@ import L, { Map } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styles from '../Styles/Mapa.module.css';
 import MapaInterface from '../interfaces/mapaInterface';
+import QueimadaInterface from '../interfaces/queimadaInterface'
 import { ESTADOS_BRASIL } from '../constants/mapFilters';
 import { ESTADO_CENTERS } from '../constants/mapCenters';
 import 'leaflet.heat'
@@ -35,11 +36,7 @@ const BIOMA_COLORS: Record<string, string> = {
   'Mata Atlântica': '#43a047'
 };
 
-const Mapa: React.FC<MapaInterface> = ({
-  focosDeCalor = false,
-  riscoDeFogo = false,
-  areasQueimadas = false,
-}) => {
+const Mapa: React.FC<MapaInterface> = () => {
   const mapRef = useRef<Map | null>(null);
 
   const brasilLayerRef = useRef<L.GeoJSON | null>(null);
@@ -52,17 +49,14 @@ const Mapa: React.FC<MapaInterface> = ({
   const [biomasGeojsons, setBiomasGeojsons] = useState<{ [bioma: string]: any }>({});
 
   const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
-  const [dataType, setDataType] = useState<'focos' | 'riscos' | 'queimadas'>('focos');
+  const [dataType, setDataType] = useState<string>('focos');
   const [estado, setEstado] = useState<string>('');
   const [estadoFiltrado, setEstadoFiltrado] = useState<string>('');
   const [bioma, setBioma] = useState<string>('');
   const [biomaFiltrado, setBiomaFiltrado] = useState<string>('');
-  const [isFocosDeCalor, setIsFocosDeCalor] = useState<boolean>(focosDeCalor);
-  const [isRiscoDeFogo, setIsRiscoDeFogo] = useState<boolean>(riscoDeFogo);
-  const [isAreasQueimadas, setIsAreasQueimadas] = useState<boolean>(areasQueimadas);
   const [detailType, setDetailType] = useState<string>('marcadores')
-
   const [markers, setMarkers] = useState<{ geocode: [number, number]; popUp: string }[]>([]);
+  const [mostrarImagemRisco, setMostrarImagemRisco] = useState(false);
 
   useEffect(() => {
     fetch('/brazil-states.geojson')
@@ -188,6 +182,17 @@ const Mapa: React.FC<MapaInterface> = ({
 
   // Inicializa o mapa
   useEffect(() => {
+    if (dataType === 'imagem-risco') {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      return;
+    }
+
+    const mapDiv = document.getElementById('mapid');
+    if (!mapDiv) return;
+
     if (mapRef.current === null) {
       const brazilBounds: L.LatLngBoundsExpression = [
         [-33.75, -73.99],
@@ -204,7 +209,15 @@ const Mapa: React.FC<MapaInterface> = ({
       }).addTo(map);
       mapRef.current = map;
     }
-  }, []);
+  }, [dataType]);
+
+  useEffect(() => {
+    if (dataType !== 'imagem-risco' && mapRef.current) {
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 100);
+    }
+  }, [dataType])
 
   // --- Marcadores ---
   const defaultIcon = L.icon({
@@ -217,17 +230,18 @@ const Mapa: React.FC<MapaInterface> = ({
     shadowSize: [41, 41]
   });
 
+  // esconde o mapa quando escolhe imagem risco de fogo
   useEffect(() => {
     if (!mapRef.current) return;
 
     leafletMarkersRef.current.forEach(marker => marker.remove());
     leafletMarkersRef.current = [];
 
-      markers.forEach(({ geocode, popUp }) => {
-        const marker = L.marker(geocode, { icon: defaultIcon }).addTo(mapRef.current!)
-        if (popUp) marker.bindPopup(popUp)
-        leafletMarkersRef.current.push(marker)
-      })
+    markers.forEach(({ geocode, popUp }) => {
+      const marker = L.marker(geocode, { icon: defaultIcon }).addTo(mapRef.current!)
+      if (popUp) marker.bindPopup(popUp)
+      leafletMarkersRef.current.push(marker)
+    })
   }, [markers]);
 
   // --- heatmap ---
@@ -244,43 +258,43 @@ const Mapa: React.FC<MapaInterface> = ({
     }
 
     // Adiciona novo heatmap
-      const heatPoints = markersParaMapa.map(m => [
-        Number(m.geocode[0]),
-        Number(m.geocode[1]),
-        10
-      ]);
-      // debug
-      console.log('heatPoints para heatLayer:', heatPoints)
-      if (heatPoints.length > 0) {
-        const HeatLayer = (L as any).heatLayer
-        console.log('mapRef.current:', mapRef.current)
-        heatLayerRef.current = HeatLayer(heatPoints, {
-          radius: 15,
-          blur: 10,
-          maxZoom: 15,
-          minOpacity: 0.5,
-          gradient: {
-            0.4: 'blue',
-            0.6: 'cyan',
-            0.7: 'lime',
-            0.8: 'yellow',
-            1.0: 'red'
-          }
-        }).addTo(mapRef.current);
-      }
+    const heatPoints = markersParaMapa.map(m => [
+      Number(m.geocode[0]),
+      Number(m.geocode[1]),
+      10
+    ]);
+    // debug
+    console.log('heatPoints para heatLayer:', heatPoints)
+    if (heatPoints.length > 0) {
+      const HeatLayer = (L as any).heatLayer
+      console.log('mapRef.current:', mapRef.current)
+      heatLayerRef.current = HeatLayer(heatPoints, {
+        radius: 15,
+        blur: 10,
+        maxZoom: 15,
+        minOpacity: 0.5,
+        gradient: {
+          0.4: 'blue',
+          0.6: 'cyan',
+          0.7: 'lime',
+          0.8: 'yellow',
+          1.0: 'red'
+        }
+      }).addTo(mapRef.current);
+    }
   }
 
   // limpar o heatmap
-  function limparHeatmap(){
-    if (heatLayerRef.current && mapRef.current){
+  function limparHeatmap() {
+    if (heatLayerRef.current && mapRef.current) {
       mapRef.current.removeLayer(heatLayerRef.current)
       heatLayerRef.current = null
     }
   }
 
   // limpar marcadores
-  function limparMarcadores(){
-    if (leafletMarkersRef.current){
+  function limparMarcadores() {
+    if (leafletMarkersRef.current) {
       leafletMarkersRef.current.forEach(marker => marker.remove())
       leafletMarkersRef.current = []
     }
@@ -319,6 +333,8 @@ const Mapa: React.FC<MapaInterface> = ({
   const handleFilterApply = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
+    setMostrarImagemRisco(false)
+
     setEstadoFiltrado(mapType === 'estado' ? estado : '');
     setBiomaFiltrado(mapType === 'bioma' ? bioma : '');
 
@@ -341,12 +357,12 @@ const Mapa: React.FC<MapaInterface> = ({
     }));
 
     if (detailType === 'marcadores') {
-      limparHeatmap()  
+      limparHeatmap()
       limparMarcadores()
       setMarkers(markersParaMapa)
     }
 
-    if (detailType === 'calor'){
+    if (detailType === 'calor') {
       limparHeatmap()
       limparMarcadores()
       atualizarHeatmap(markersParaMapa)
@@ -360,144 +376,166 @@ const Mapa: React.FC<MapaInterface> = ({
   };
 
   return (
-    <section className={styles.container}>
-      <form className={styles.filterPanel} onSubmit={handleFilterApply}>
-        <h2>Filtros</h2>
-        <div className={styles.radioGroup}>
-          <p>Tipo de mapa:</p>
-          <label>
-            <input
-              type="radio"
-              name="mapType"
-              value="estado"
-              checked={mapType === 'estado'}
-              onChange={() => setMapType('estado')}
-            />
-            Estados
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="mapType"
-              value="bioma"
-              checked={mapType === 'bioma'}
-              onChange={() => setMapType('bioma')}
-            />
-            Biomas
-          </label>
-        </div>
+    <div>
+      <section className={styles.container}>
+        <form className={styles.filterPanel} onSubmit={handleFilterApply}>
+          <h2>Filtros</h2>
+          <div className={styles.radioGroup}>
+            <p>Tipo de mapa:</p>
+            <label>
+              <input
+                type="radio"
+                name="mapType"
+                value="estado"
+                checked={mapType === 'estado'}
+                onChange={() => setMapType('estado')}
+              />
+              Estados
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="mapType"
+                value="bioma"
+                checked={mapType === 'bioma'}
+                onChange={() => setMapType('bioma')}
+              />
+              Biomas
+            </label>
+          </div>
 
-        <div className={styles.radioGroup}>
-          <p>Tipo de dados:</p>
-          <label>
-            <input
-              type="radio"
-              name="dataType"
-              value="focos"
-              checked={dataType === 'focos'}
-              onChange={() => setDataType('focos')}
-            />
-            Focos de Calor
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="dataType"
-              value="riscos"
-              checked={dataType === 'riscos'}
-              onChange={() => setDataType('riscos')}
-            />
-            Riscos de Fogo
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="dataType"
-              value="queimadas"
-              checked={dataType === 'queimadas'}
-              onChange={() => setDataType('queimadas')}
-            />
-            Áreas Queimadas
-          </label>
-        </div>
+          <div className={styles.radioGroup}>
+            <p>Tipo de dados:</p>
+            <label>
+              <input
+                type="radio"
+                name="dataType"
+                value="focos"
+                checked={dataType === 'focos'}
+                onChange={() => setDataType('focos')}
+              />
+              Focos de Calor
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="dataType"
+                value="riscos"
+                checked={dataType === 'riscos'}
+                onChange={() => setDataType('riscos')}
+              />
+              Riscos de Fogo (Mapa)
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="dataType"
+                value="imagem-risco"
+                checked={dataType === 'imagem-risco'}
+                onChange={() => setDataType('imagem-risco')}
+              />
+              Riscos de Fogo (Imagem)
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="dataType"
+                value="queimadas"
+                checked={dataType === 'queimadas'}
+                onChange={() => setDataType('queimadas')}
+              />
+              Áreas Queimadas
+            </label>
+          </div>
 
-        <div className={styles.radioGroup}>
-          <p>Tipo de detalhes:</p>
-          <label>
-            <input
-              type="radio"
-              name="dataType"
-              value="focos"
-              checked={detailType === 'marcadores'}
-              onChange={() => setDetailType('marcadores')}
-            />
-            Marcadores
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="dataType"
-              value="riscos"
-              checked={detailType === 'calor'}
-              onChange={() => setDetailType('calor')}
-            />
-            Mapa de Calor
-          </label>
-        </div>
+          <div className={styles.radioGroup}>
+            <p>Tipo de detalhes:</p>
+            <label>
+              <input
+                type="radio"
+                name="dataType"
+                value="focos"
+                checked={detailType === 'marcadores'}
+                onChange={() => setDetailType('marcadores')}
+              />
+              Marcadores
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="dataType"
+                value="riscos"
+                checked={detailType === 'calor'}
+                onChange={() => setDetailType('calor')}
+              />
+              Mapa de Calor
+            </label>
+          </div>
 
-        {mapType === 'estado' && (
-          <div className={styles.selectGroup}>
-            <select value={estado} onChange={(e) => setEstado(e.target.value)}>
-              <option value="">Estado</option>
-              {ESTADOS_BRASIL.map((uf) => (
-                <option key={uf} value={uf}>
-                  {uf}
-                </option>
+          {mapType === 'estado' && (
+            <div className={styles.selectGroup}>
+              <select value={estado} onChange={(e) => setEstado(e.target.value)}>
+                <option value="">Estado</option>
+                {ESTADOS_BRASIL.map((uf) => (
+                  <option key={uf} value={uf}>
+                    {uf}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {mapType === 'bioma' && (
+            <div className={styles.selectGroup}>
+              <select value={bioma} onChange={e => setBioma(e.target.value)}>
+                <option value="">Todos</option>
+                {BIOMAS_BRASIL.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <button className={styles.applyButton} type="submit">
+            Ativar Filtros
+          </button>
+
+          {mapType === 'bioma' && (
+            <div style={{ marginTop: "1rem", display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+              {BIOMA_FILES.map(({ name, color }) => (
+                <div key={name} style={{ display: "flex", alignItems: "center", minWidth: 140 }}>
+                  <span style={{
+                    display: "inline-block",
+                    width: 20,
+                    height: 20,
+                    borderRadius: 4,
+                    marginRight: 8,
+                    background: color,
+                    border: "1.5px solid #333"
+                  }} />
+                  <span style={{ fontSize: 14 }}>{name}</span>
+                </div>
               ))}
-            </select>
-          </div>
-        )}
+            </div>
+          )}
+        </form>
 
-        {mapType === 'bioma' && (
-          <div className={styles.selectGroup}>
-            <select value={bioma} onChange={e => setBioma(e.target.value)}>
-              <option value="">Todos</option>
-              {BIOMAS_BRASIL.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <button className={styles.applyButton} type="submit">
-          Ativar Filtros
-        </button>
-
-        {mapType === 'bioma' && (
-          <div style={{ marginTop: "1rem", display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-            {BIOMA_FILES.map(({ name, color }) => (
-              <div key={name} style={{ display: "flex", alignItems: "center", minWidth: 140 }}>
-                <span style={{
-                  display: "inline-block",
-                  width: 20,
-                  height: 20,
-                  borderRadius: 4,
-                  marginRight: 8,
-                  background: color,
-                  border: "1.5px solid #333"
-                }} />
-                <span style={{ fontSize: 14 }}>{name}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </form>
-
-      <div id="mapid" className={styles.map}></div>
-    </section>
+        <div style={{ flex: 1, height: '80vh' }}>
+          {dataType === 'imagem-risco' ? (
+            <img
+              src="/mapa-risco-fogo.png"
+              alt="Mapa de Risco de Fogo"
+              style={{ maxWidth: '100%', maxHeight: '70vh', border: '2px solid #333', borderRadius: 8 }}
+            />
+          ) : (
+            <div id="mapid" className={styles.map}></div>
+          )}
+        </div>
+      </section>
+    </div>
   );
 };
 
-export default Mapa;
+export default Mapa
