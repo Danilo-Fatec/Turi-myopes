@@ -15,7 +15,7 @@
 | Melhorias de interface                                         | Concluido |
 | Estudar e implementar APP na Locaweb                           | Cancelado |
 
-# BURNDOWN SP2
+# BURNDOWN SP3
  <div align = center>
  <img src="Imagens Turi/Burndown-SP3.PNG">
  </div>
