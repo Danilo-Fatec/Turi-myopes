@@ -540,22 +540,7 @@ const Mapa: React.FC<MapaInterface> = () => {
             <div id="mapid" className={styles.map}></div>
           )}
           {dataType !== 'imagem-risco' && (
-            <div
-              style={{
-                position: 'absolute',
-                left: 32,
-                bottom: 32,
-                background: 'rgba(255,255,255,0.95)',
-                border: '1px solid #333',
-                borderRadius: 8,
-                padding: '1rem',
-                minWidth: 240,
-                zIndex: 1000,
-                fontSize: 14,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                color: '#000'
-              }}
-            >
+            <div className={styles.mapLegend}>
               <strong>Legenda</strong>
               <ul style={{ margin: '0.5rem 0 0 0', padding: 0, listStyle: 'none' }}>
                 {dataType === 'focos' && (

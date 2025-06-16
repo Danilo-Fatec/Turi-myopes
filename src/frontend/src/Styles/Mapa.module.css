@@ -29,6 +29,7 @@
   padding: 1rem 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
+  max-height: calc(100vh - 180px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -95,6 +96,21 @@
   width: 100%;
 }
 
+.mapLegend {
+  position: absolute;
+  left: 32px;
+  bottom: 32px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+  min-width: 240px;
+  z-index: 1000;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: #000;
+}
+
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
@@ -103,12 +119,22 @@
 
   .filterPanel {
     flex: 0 0 auto;
-    width: 100%;
+    width: 90%;
   }
 
   .map {
     flex: none;
     height: 400px;
+  }
+
+  .mapLegend {
+    position: static;
+    left: auto;
+    bottom: auto;
+    margin: 1rem 0 0 0;
+    width: 93%;
+    min-width: 0;
+    box-shadow: none;
   }
 }
 
@@ -131,5 +157,15 @@
   .applyButton {
     font-size: 0.9rem;
     padding: 0.5rem;
+  }
+
+  .mapLegend {
+    position: static;
+    left: auto;
+    bottom: auto;
+    margin: 1rem 0 0 0;
+    width: 90%;
+    min-width: 0;
+    box-shadow: none;
   }
 }
