@@ -17,5 +17,5 @@
 
 # BURNDOWN SP3
  <div align = center>
- <img src="Imagens Turi/Burndown-SP3.PNG">
+ <img src="Imagens Turi/burndown-SP3.PNG">
  </div>
