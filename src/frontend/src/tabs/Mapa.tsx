@@ -460,8 +460,8 @@ const Mapa: React.FC<MapaInterface> = () => {
             <label>
               <input
                 type="radio"
-                name="dataType"
-                value="focos"
+                name="detailType"
+                value="marcadores"
                 checked={detailType === 'marcadores'}
                 onChange={() => setDetailType('marcadores')}
               />
@@ -470,8 +470,8 @@ const Mapa: React.FC<MapaInterface> = () => {
             <label>
               <input
                 type="radio"
-                name="dataType"
-                value="riscos"
+                name="detailType"
+                value="calor"
                 checked={detailType === 'calor'}
                 onChange={() => setDetailType('calor')}
               />
@@ -585,7 +585,7 @@ const Mapa: React.FC<MapaInterface> = () => {
                       </li>
                     )}
                     <li>Quantidade: <b>{markers.length}</b></li>
-                                        <li>
+                    <li>
                       Intensidade média: <b style={{ color: '#ffb300' }}>
                         {mediaRiscoFogo !== null ? mediaRiscoFogo : 'Não disponível'}
                       </b>
