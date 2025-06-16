@@ -57,6 +57,7 @@ const Mapa: React.FC<MapaInterface> = () => {
   const [detailType, setDetailType] = useState<string>('marcadores')
   const [markers, setMarkers] = useState<{ geocode: [number, number]; popUp: string }[]>([]);
   const [mostrarImagemRisco, setMostrarImagemRisco] = useState(false);
+  const [mediaRiscoFogo, setMediaRiscoFogo] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/brazil-states.geojson')
@@ -351,9 +352,15 @@ const Mapa: React.FC<MapaInterface> = () => {
       mapType
     });
 
+    const media = dataType === 'riscos' && pontosFiltrados.length > 0
+      ? (pontosFiltrados.reduce((acc, p) => acc + Number(p.risco_fogo || 0), 0) / pontosFiltrados.length).toFixed(2)
+      : null;
+    setMediaRiscoFogo(media);
+
     const markersParaMapa = pontosFiltrados.map((item: any) => ({
       geocode: [Number(item.lat), Number(item.lon)] as [number, number],
-      popUp: `${item.municipio || ''} - ${item.estado || ''} (${item.data_hora_gmt})`
+      popUp: `${item.municipio || ''} - ${item.estado || ''} (${item.data_hora_gmt})` +
+        (item.risco_fogo !== undefined ? `<br/>Risco de Fogo: <b>${Number(item.risco_fogo).toFixed(2)}</b>` : '')
     }));
 
     if (detailType === 'marcadores') {
@@ -522,7 +529,7 @@ const Mapa: React.FC<MapaInterface> = () => {
           )}
         </form>
 
-        <div style={{ flex: 1, height: '80vh' }}>
+        <div style={{ flex: 1, height: '80vh', position: 'relative' }}>
           {dataType === 'imagem-risco' ? (
             <img
               src="/mapa-risco-fogo.png"
@@ -531,6 +538,82 @@ const Mapa: React.FC<MapaInterface> = () => {
             />
           ) : (
             <div id="mapid" className={styles.map}></div>
+          )}
+          {dataType !== 'imagem-risco' && (
+            <div
+              style={{
+                position: 'absolute',
+                left: 32,
+                bottom: 32,
+                background: 'rgba(255,255,255,0.95)',
+                border: '1px solid #333',
+                borderRadius: 8,
+                padding: '1rem',
+                minWidth: 240,
+                zIndex: 1000,
+                fontSize: 14,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                color: '#000'
+              }}
+            >
+              <strong>Legenda</strong>
+              <ul style={{ margin: '0.5rem 0 0 0', padding: 0, listStyle: 'none' }}>
+                {dataType === 'focos' && (
+                  <>
+                    <li>
+                      <span style={{
+                        display: 'inline-block', width: 16, height: 16, background: '#1976d2', borderRadius: 3, marginRight: 8, border: '1px solid #333'
+                      }} /> Foco de calor detectado
+                    </li>
+                    <li>Quantidade: <b>{markers.length}</b></li>
+                  </>
+                )}
+                {dataType === 'riscos' && (
+                  <>
+                    {detailType === 'marcadores' && (
+                      <li>
+                        <span style={{
+                          display: 'inline-block', width: 16, height: 16, background: '#e65100', borderRadius: 3, marginRight: 8, border: '1px solid #333'
+                        }} /> Marcador: ponto com risco de fogo
+                      </li>
+                    )}
+                    {detailType === 'calor' && (
+                      <li>
+                        <span style={{
+                          display: 'inline-block', width: 16, height: 16, background: 'linear-gradient(90deg, blue, cyan, lime, yellow, red)', borderRadius: 3, marginRight: 8, border: '1px solid #333'
+                        }} /> Heatmap: intensidade do risco de fogo
+                      </li>
+                    )}
+                    <li>Quantidade: <b>{markers.length}</b></li>
+                                        <li>
+                      Intensidade média: <b style={{ color: '#ffb300' }}>
+                        {mediaRiscoFogo !== null ? mediaRiscoFogo : 'Não disponível'}
+                      </b>
+                    </li>
+                  </>
+                )}
+                {dataType === 'queimadas' && (
+                  <>
+                    <li>
+                      <span style={{
+                        display: 'inline-block', width: 16, height: 16, background: '#8d6e63', borderRadius: 3, marginRight: 8, border: '1px solid #333'
+                      }} /> Área queimada detectada
+                    </li>
+                    <li>Quantidade: <b>{markers.length}</b></li>
+                  </>
+                )}
+                {(biomaFiltrado || estadoFiltrado) && (
+                  <li style={{ marginTop: 8, fontSize: 13 }}>
+                    <b>Filtros:</b>
+                    {biomaFiltrado && <> Bioma: {biomaFiltrado};</>}
+                    {estadoFiltrado && <> Estado: {estadoFiltrado};</>}
+                  </li>
+                )}
+                <li style={{ marginTop: 8, fontSize: 12 }}>
+                  Fonte: INPE / Projeto MYOPES
+                </li>
+              </ul>
+            </div>
           )}
         </div>
       </section>
