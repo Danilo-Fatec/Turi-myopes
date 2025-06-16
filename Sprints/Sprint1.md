@@ -10,16 +10,12 @@
 | Levantamento de requisitos Funcionais e não funcionais         | Concluido |
 | Criar Json para Gráfico - DOD                                  | Concluido | 
 | Aprovar tarefas concluídas do Trello                           | Concluido |
-| Criar tela inicial                   | Concluido |
-| Definir cores - DOD                    | Concluido |
-| UML caso de uso DOD                   | Concluido |
-| Sprint Backlog - Sprint 1                   | Concluido |
-| Trello - Sprint 1                   | Concluido |
-| Criar componentes iniciais e estilização - DOR                   | Concluido |
-|                    | Concluido |
-|                    | Concluido |
-|                    | Concluido |
-|                    | Concluido |
+| Criar tela inicial                                             | Concluido |
+| Definir cores - DOD                                            | Concluido |
+| UML caso de uso DOD                                            | Concluido |
+| Sprint Backlog - Sprint 1                                      | Concluido |
+| Trello - Sprint 1                                              | Concluido |
+| Criar componentes iniciais e estilização - DOR                 | Concluido |
 
 # BURNDOWN SP1
  <div align = center>
