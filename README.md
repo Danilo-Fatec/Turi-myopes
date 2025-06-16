@@ -17,6 +17,7 @@ O objetivo é especificar e construir um site informativo que tem como objetivo 
 |------|---------------------|--------------------|---------------------|--------------------|  
 | 1 | :calendar:  ➡ (24/03) | 📆 ➡ (17/04) | Concluído | [Relatório](Sprints/Sprint1.md)
 | 2 | :calendar:  ➡ (22/04) | 📆 ➡ (16/05) | Concluído | [Relatório](Sprints/Sprint2.md)
+| 3 | :calendar:  ➡ (16/05) | 📆 ➡ (16/06) | Concluído | [Relatório](Sprints/Sprint3.md)
 
 |       RESTRIÇÕES DE PROJETO E TECNOLOGIA      |  
 |-----------------------------------------------|
@@ -89,6 +90,9 @@ RF19 – Logo clicável para que o usuário possa voltar a página inicial  | Us
  <img src="Sprints/Imagens Turi/Brundown-SP2.PNG">
  </div>
 
+ # BURNDOWN SP3
+<div align = center>
+<img src="Sprints/Imagens Turi/Burndown-SP3.PNG">
 -----------------------------------------------------------------------------------
 
 # WIREFRAME
