@@ -92,7 +92,8 @@ RF19 – Logo clicável para que o usuário possa voltar a página inicial  | Us
 
  # BURNDOWN SP3
 <div align = center>
-<img src="Sprints/Imagens Turi/Burndown-SP3.PNG">
+<img src="Sprints/Imagens Turi/burndown-SP3.PNG">
+ 
 -----------------------------------------------------------------------------------
 
 # WIREFRAME
@@ -101,6 +102,7 @@ RF19 – Logo clicável para que o usuário possa voltar a página inicial  | Us
 <img src='Sprints/Imagens Turi/filtros.PNG' width='500'/>
 <img src='Sprints/Imagens Turi/bioma.PNG' width='500'/>
 <img src='Sprints/Imagens Turi/biomadados.PNG' width='500'/>
+
 -----------------------------------------------------------------------------------
 
 # 🔗 LINKS
