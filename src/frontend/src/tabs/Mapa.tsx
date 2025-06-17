@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import L, { Map } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styles from '../Styles/Mapa.module.css';
@@ -7,6 +7,7 @@ import QueimadaInterface from '../interfaces/queimadaInterface'
 import { ESTADOS_BRASIL } from '../constants/mapFilters';
 import { ESTADO_CENTERS } from '../constants/mapCenters';
 import 'leaflet.heat'
+import { useParams } from 'react-router-dom';
 
 const BIOMAS_BRASIL = [
   'Amazônia',
@@ -36,7 +37,9 @@ const BIOMA_COLORS: Record<string, string> = {
   'Mata Atlântica': '#43a047'
 };
 
-const Mapa: React.FC<MapaInterface> = () => {
+const Mapa: React.FC<MapaInterface> = (
+    {item}: MapaInterface
+): ReactElement => {
   const mapRef = useRef<Map | null>(null);
 
   const brasilLayerRef = useRef<L.GeoJSON | null>(null);
@@ -48,8 +51,12 @@ const Mapa: React.FC<MapaInterface> = () => {
   const [geojsonEstados, setGeojsonEstados] = useState<any>(null);
   const [biomasGeojsons, setBiomasGeojsons] = useState<{ [bioma: string]: any }>({});
 
+  let propItem = 'focos'
+  if (item !== undefined){
+    propItem = String(item)
+  }
   const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
-  const [dataType, setDataType] = useState<string>('focos');
+  const [dataType, setDataType] = useState<string>(propItem);
   const [estado, setEstado] = useState<string>('');
   const [estadoFiltrado, setEstadoFiltrado] = useState<string>('');
   const [bioma, setBioma] = useState<string>('');

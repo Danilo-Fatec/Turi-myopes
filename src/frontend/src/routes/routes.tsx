@@ -10,9 +10,9 @@ const AppRoutes: React.FC = () => {
       <Routes>
         <Route path="/" element={<Inicio />} />
         <Route path="/mapa" element={<Mapa />} />
-        <Route path='/mapa/risco-de-fogo' element={<Mapa riscoDeFogo={true}/>}/>
-        <Route path='/mapa/focos-de-calor' element={<Mapa focosDeCalor={true}/>}/>
-        <Route path='/mapa/areas-queimadas' element={<Mapa areasQueimadas={true}/>} />
+        <Route path='/mapa/risco-de-fogo' element={<Mapa item='riscos'/>}/>
+        <Route path='/mapa/focos-de-calor' element={<Mapa item='focos'/>}/>
+        <Route path='/mapa/areas-queimadas' element={<Mapa item='queimadas'/>} />
         <Route path="/dados" element={<Dados />} />
         <Route path="/quem-somos" element={<QuemSomos />} />
         <Route path="*" element={<h1>Página não encontrada</h1>} />

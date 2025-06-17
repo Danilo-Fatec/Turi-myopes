@@ -79,16 +79,16 @@ const Dados: React.FC = () => {
     try {
       const response = await api.get(`/${dataType}-${mapType}`)
       const data = response.data
+      console.log(data)
 
       const labels = data.map((item: any) => item.estado || item.bioma)
       const values = data.map((item: any) =>
         dataType === 'focos'
           ? Number(item.total_focos)
           : dataType === 'risco'
-            ? Number(item.risco_medio)
-            : Number(item.total_precipitacao)
+            ? Number(Math.abs(Number(item.risco_medio)))
+            : Number(Math.abs(Number(item.total_precipitacao)))
       )
-
       return { labels, values }
     } catch (error) {
       return { labels: [], values: [] }
@@ -234,10 +234,7 @@ const Dados: React.FC = () => {
               value={region}
               onChange={(e) => setRegion(e.target.value)}
             >
-              <option value="">Selecione</option>
-              {(mapType === 'bioma' ? BIOMAS : ESTADOS).map((ref) => (
-                <option value={ref} key={ref}>{ref}</option>
-              ))}
+              <option value="">Todos</option>
             </select>
           </div>
 
