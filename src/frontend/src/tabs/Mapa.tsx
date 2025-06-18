@@ -1,5 +1,5 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
-import L, { Map } from 'leaflet';
+import L, { Map, ImageOverlay } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styles from '../Styles/Mapa.module.css';
 import MapaInterface from '../interfaces/mapaInterface';
@@ -8,6 +8,7 @@ import { ESTADOS_BRASIL } from '../constants/mapFilters';
 import { ESTADO_CENTERS } from '../constants/mapCenters';
 import 'leaflet.heat'
 import { useParams } from 'react-router-dom';
+import api from '../services/api';
 
 const BIOMAS_BRASIL = [
   'Amazônia',
@@ -38,7 +39,7 @@ const BIOMA_COLORS: Record<string, string> = {
 };
 
 const Mapa: React.FC<MapaInterface> = (
-    {item}: MapaInterface
+  { item }: MapaInterface
 ): ReactElement => {
   const mapRef = useRef<Map | null>(null);
 
@@ -51,11 +52,12 @@ const Mapa: React.FC<MapaInterface> = (
   const [geojsonEstados, setGeojsonEstados] = useState<any>(null);
   const [biomasGeojsons, setBiomasGeojsons] = useState<{ [bioma: string]: any }>({});
 
+
+  const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
   let propItem = 'focos'
-  if (item !== undefined){
+  if (item !== undefined) {
     propItem = String(item)
   }
-  const [mapType, setMapType] = useState<'estado' | 'bioma'>('estado');
   const [dataType, setDataType] = useState<string>(propItem);
   const [estado, setEstado] = useState<string>('');
   const [estadoFiltrado, setEstadoFiltrado] = useState<string>('');
@@ -65,6 +67,10 @@ const Mapa: React.FC<MapaInterface> = (
   const [markers, setMarkers] = useState<{ geocode: [number, number]; popUp: string }[]>([]);
   const [mostrarImagemRisco, setMostrarImagemRisco] = useState(false);
   const [mediaRiscoFogo, setMediaRiscoFogo] = useState<string | null>(null);
+  const hoje = new Date().toISOString().slice(0, 10);
+  const [startDate, setStartDate] = useState<string>(hoje)
+  const [endDate, setEndDate] = useState<string>(hoje)
+  const [imagemOverlay, setImagemOverlay] = useState<L.ImageOverlay | null>(null)
 
   useEffect(() => {
     fetch('/brazil-states.geojson')
@@ -190,13 +196,6 @@ const Mapa: React.FC<MapaInterface> = (
 
   // Inicializa o mapa
   useEffect(() => {
-    if (dataType === 'imagem-risco') {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-      return;
-    }
 
     const mapDiv = document.getElementById('mapid');
     if (!mapDiv) return;
@@ -227,11 +226,35 @@ const Mapa: React.FC<MapaInterface> = (
     }
   }, [dataType])
 
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove overlay antigo se existir
+    if (imagemOverlay) {
+      mapRef.current.removeLayer(imagemOverlay);
+      setImagemOverlay(null);
+    }
+
+    if (dataType === 'imagem-risco') {
+      const bounds: L.LatLngBoundsExpression = [
+        [-33.75, -73.99],
+        [5.27, -34.79]
+      ]
+
+      const overlay = L.imageOverlay(
+        '/mapa-risco-overlay-v4.png',
+        bounds,
+        { opacity: 0.5, interactive: false }
+      )
+      overlay.addTo(mapRef.current)
+      setImagemOverlay(overlay)
+    }
+  }, [dataType, mapRef.current])
+
   // --- Marcadores ---
   const defaultIcon = L.icon({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -278,7 +301,7 @@ const Mapa: React.FC<MapaInterface> = (
       console.log('mapRef.current:', mapRef.current)
       heatLayerRef.current = HeatLayer(heatPoints, {
         radius: 15,
-        blur: 10,
+        blur: 5,
         maxZoom: 15,
         minOpacity: 0.5,
         gradient: {
@@ -309,30 +332,39 @@ const Mapa: React.FC<MapaInterface> = (
   }
 
   // --- Backend fetch dos pontos ---
-  async function fetchPontosPorData(data: string) {
-    const response = await fetch(`http://localhost:3000/dados-dia?data=${data}`)
-    return await response.json()
+  const fetchPontosPeriodo = async (startDate: string, endDate: string) => {
+    let url = '';
+    if (dataType === 'focos') url = '/focos-pontos';
+    else if (dataType === 'riscos') url = '/riscos-pontos';
+    else if (dataType === 'queimadas') url = '/queimadas-pontos';
+
+    if (!url) return [];
+
+    const params: any = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    if (mapType === 'estado' && estado) params.estado = estado;
+    if (mapType === 'bioma' && bioma) params.bioma = bioma;
+
+    try {
+      const response = await api.get(url, { params });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar pontos:', error);
+      return [];
+    }
   }
 
   // --- Filtro dos pontos ---
   function filtrarPontos(
     pontos: any[],
-    { estado, bioma, focosDeCalor, riscoDeFogo, areasQueimadas, mapType }: {
-      estado: string,
-      bioma: string,
-      focosDeCalor: boolean,
-      riscoDeFogo: boolean,
-      areasQueimadas: boolean,
-      mapType: 'estado' | 'bioma'
-    }
+    filtros: { estado?: string; bioma?: string; mapType: 'estado' | 'bioma' }
   ) {
+    const { estado, bioma, mapType } = filtros;
     return pontos.filter((p: any) => {
       let ok = true;
-      if (mapType === 'estado' && estado) ok = ok && String(p.estado).toUpperCase() === String(estado).toUpperCase()
+      if (mapType === 'estado' && estado) ok = ok && String(p.estado).toUpperCase() === String(estado).toUpperCase();
       if (mapType === 'bioma' && bioma) ok = ok && p.bioma === bioma;
-      if (focosDeCalor) ok = ok && Number(p.frp) > 0;
-      if (riscoDeFogo) ok = ok && Number(p.risco_fogo) > 0;
-      if (areasQueimadas) ok = ok && Number(p.precipitacao) > 0;
       return ok;
     });
   }
@@ -347,28 +379,44 @@ const Mapa: React.FC<MapaInterface> = (
     setBiomaFiltrado(mapType === 'bioma' ? bioma : '');
 
     // Exemplo de data fixa, ajuste para seu caso!
-    const dataSelecionada = "2025-02-14"
-    const todosPontos = await fetchPontosPorData(dataSelecionada)
+    const todosPontos = await fetchPontosPeriodo(startDate, endDate)
+
+    console.log('Fetch terminou! Dados recebidos:', todosPontos)
 
     const pontosFiltrados = filtrarPontos(todosPontos, {
       estado,
       bioma,
-      focosDeCalor: dataType === 'focos',
-      riscoDeFogo: dataType === 'riscos',
-      areasQueimadas: dataType === 'queimadas',
       mapType
     });
 
-    const media = dataType === 'riscos' && pontosFiltrados.length > 0
-      ? (pontosFiltrados.reduce((acc, p) => acc + Number(p.risco_fogo || 0), 0) / pontosFiltrados.length).toFixed(2)
-      : null;
-    setMediaRiscoFogo(media);
+    console.log('Coordenadas dos pontos filtrados:', pontosFiltrados.map(p => ({
+      lat: p.lat ?? p.latitude,
+      lon: p.lon ?? p.longitude
+    })))
+
+    const riscosValidos = pontosFiltrados
+      .map(p => Number(p.risco_fogo))
+      .filter(rf => !isNaN(rf) && rf >= 0)
+
+    const media = dataType === 'riscos' && riscosValidos.length > 0
+      ? (riscosValidos.reduce((acc, rf) => acc + rf, 0) / riscosValidos.length).toFixed(2)
+      : null
+    setMediaRiscoFogo(media)
 
     const markersParaMapa = pontosFiltrados.map((item: any) => ({
-      geocode: [Number(item.lat), Number(item.lon)] as [number, number],
+      geocode: [
+        Number(item.lat ?? item.latitude),
+        Number(item.lon ?? item.longitude)
+      ] as [number, number],
       popUp: `${item.municipio || ''} - ${item.estado || ''} (${item.data_hora_gmt})` +
-        (item.risco_fogo !== undefined ? `<br/>Risco de Fogo: <b>${Number(item.risco_fogo).toFixed(2)}</b>` : '')
-    }));
+        (item.risco_fogo !== undefined
+          ? (Number(item.risco_fogo) < 0
+            ? `<br/>Risco de Fogo: <b>Indisponível</b>`
+            : `<br/>Risco de Fogo: <b>${Number(item.risco_fogo).toFixed(2)}</b>`)
+          : '')
+    }))
+
+    console.log('Markers para o mapa:', markersParaMapa)
 
     if (detailType === 'marcadores') {
       limparHeatmap()
@@ -381,8 +429,6 @@ const Mapa: React.FC<MapaInterface> = (
       limparMarcadores()
       atualizarHeatmap(markersParaMapa)
     }
-
-    console.log('Heatmap criado:', heatLayerRef.current)
 
     if (mapRef.current && mapType === 'estado' && estado && ESTADO_CENTERS[estado]) {
       mapRef.current.setView(ESTADO_CENTERS[estado], 7);
@@ -486,6 +532,27 @@ const Mapa: React.FC<MapaInterface> = (
             </label>
           </div>
 
+          <div className={styles.filterGroup}>
+            <label htmlFor="startDate">Data inicial: </label>
+            <input
+              type="date"
+              id="startDate"
+              value={startDate}
+              max={endDate}
+              onChange={e => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className={styles.filterGroup}>
+            <label htmlFor="endDate">Data final: </label>
+            <input
+              type="date"
+              id="endDate"
+              value={endDate}
+              min={startDate}
+              onChange={e => setEndDate(e.target.value)}
+            />
+          </div>
+
           {mapType === 'estado' && (
             <div className={styles.selectGroup}>
               <select value={estado} onChange={(e) => setEstado(e.target.value)}>
@@ -537,15 +604,7 @@ const Mapa: React.FC<MapaInterface> = (
         </form>
 
         <div style={{ flex: 1, height: '80vh', position: 'relative' }}>
-          {dataType === 'imagem-risco' ? (
-            <img
-              src="/mapa-risco-fogo.png"
-              alt="Mapa de Risco de Fogo"
-              style={{ maxWidth: '100%', maxHeight: '70vh', border: '2px solid #333', borderRadius: 8 }}
-            />
-          ) : (
-            <div id="mapid" className={styles.map}></div>
-          )}
+          <div id="mapid" className={styles.map}></div>
           {dataType !== 'imagem-risco' && (
             <div className={styles.mapLegend}>
               <strong>Legenda</strong>

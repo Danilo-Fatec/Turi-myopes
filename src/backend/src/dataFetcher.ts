@@ -1,124 +1,126 @@
-// dataFetcher.ts
 import pool from './db';
 
-async function fetchFocosDeCalor(): Promise<any[]> {
-    console.log("Função fetchFocosDeCalor() foi chamada.");
-    try {
-        const result = await pool.query('SELECT * FROM "dados_satelite"');
-        console.log("Resultado da consulta (fetchFocosDeCalor):", result);
-        console.log("Dados brutos (fetchFocosDeCalor):", result.rows);
-        return result.rows;
-    } catch (error) {
-        console.error('Erro ao buscar dados (fetchFocosDeCalor):', error);
-        return [];
-    }
-}
-
-async function getFocosPorEstadoBiomaParaPizza(): Promise<any[]> {
-    console.log("Função getFocosPorEstadoBiomaParaPizza() foi chamada.");
-    try {
-        const result = await pool.query(`
-        SELECT estado, bioma, COUNT(*) AS total_focos
-        FROM "dados_satelite"
-        GROUP BY estado, bioma
-        ORDER BY total_focos DESC
-        LIMIT 10
-    `);
-        console.log("Resultado da consulta (estado/bioma):", result);
-        console.log("Dados brutos (estado/bioma):", result.rows);
-        const formattedData = result.rows.map(row => ({
-            label: `${row.estado} - ${row.bioma}`,
-            value: parseInt(row.total_focos, 10)
-        }));
-        console.log("Dados formatados (estado/bioma):", formattedData);
-        return formattedData;
-    } catch (error) {
-        console.error('Erro ao buscar focos por estado e bioma:', error);
-        return [];
-    }
-}
-
-async function getFocosPorRiscoEstadoParaPizza(): Promise<any> {
-    console.log("Função getFocosPorRiscoEstadoParaPizza() foi chamada.");
-    try {
-        const result = await pool.query(`
-            SELECT estado, risco_fogo AS ricos_fogo, COUNT(*) AS total_focos
-            FROM "dados_satelite"
-            GROUP BY estado, risco_fogo
-            ORDER BY estado, total_focos DESC
-            LIMIT 10
-        `);
-        console.log("Resultado da consulta (risco/estado):", result);
-        console.log("Dados brutos (risco/estado):", result.rows);
-        const formattedData: { [key: string]: { label: string; value: number }[] } = {};
-        result.rows.forEach(row => {
-            console.log("Processando linha (risco/estado):", row);
-            if (!formattedData[row.estado]) {
-                formattedData[row.estado] = [];
-                console.log(`Criando array para o estado (risco/estado): ${row.estado}`);
-            }
-            formattedData[row.estado].push({
-                label: row.ricos_fogo,
-                value: parseInt(row.total_focos, 10),
-            });
-            console.log(`Adicionando ao estado ${row.estado} (risco/estado): { label: ${row.ricos_fogo}, value: ${parseInt(row.total_focos, 10)} }`);
-        });
-        console.log("Dados formatados (risco/estado):", formattedData);
-        return formattedData;
-    } catch (error) {
-        console.error('Erro ao buscar focos por risco e estado:', error);
-        return {};
-    }
-}
-
-// testando nova função
-
-/* async function getDadosFiltrados(
-    mapType: string,
-    dataType: string,
-    region: string
+// Focos de Calor (unindo todas as tabelas de satélite)
+async function getFocosDeCalorPorGrupo(
+  groupBy: 'estado' | 'bioma',
+  startDate?: string,
+  endDate?: string
 ): Promise<any[]> {
-    const categoriaColuna = mapType === 'estado' ? 'estado' : 'bioma'
-    const dadoColuna =
-        dataType === 'focos'
-            ? 'frp'
-            : dataType === 'riscos'
-                ? 'risco_fogo'
-                : 'precipitacao'
-
-  let query = `
-    SELECT 
-      ${categoriaColuna} AS categoria, 
-      AVG(${dadoColuna}) AS media
-    FROM dados_satelite
-    WHERE 1=1
-  `
-
-    if (region) query += ` AND ${mapType === 'estado' ? 'estado' : 'bioma'} = '${region}'`
-
-    query += ` GROUP BY categoria ORDER BY categoria`
-
-    try {
-        const result = await pool.query(query);
-        return result.rows.map(row => ({
-        label: row.categoria,
-        value: parseFloat(row.media),
-        }));
-    } catch (error) {
-        console.error('Erro ao executar a consulta:', error)
-        throw error
+  try {
+    let where = '';
+    const params: any[] = [];
+    if (startDate) {
+      params.push(startDate);
+      where += ` AND data >= $${params.length}`;
     }
-} */
-
-export async function getDadosDia(): Promise<any[]> {
+    if (endDate) {
+      params.push(endDate);
+      where += ` AND data <= $${params.length}`;
+    }
     const query = `
-    SELECT id, lat, lon, estado, municipio, bioma, data_hora_gmt
-    FROM dados_satelite
-    WHERE data_hora_gmt::date = $1
-      AND lat IS NOT NULL AND lon IS NOT NULL
-  `;
-    const result = await pool.query(query);
-    return result.rows;
+      SELECT ${groupBy}, COUNT(*) AS total_focos FROM (
+        SELECT ${groupBy}, data_hora_gmt as data FROM dados_satelite_2025
+        UNION ALL
+        SELECT ${groupBy}, data_pas as data FROM dados_satelite_2024
+        UNION ALL
+        SELECT ${groupBy}, data_pas as data FROM dados_satelite_2023
+      ) AS uniao
+      WHERE 1=1 ${where}
+      GROUP BY ${groupBy}
+      ORDER BY total_focos DESC
+      LIMIT 10
+    `;
+    const result = await pool.query(query, params);
+    return result.rows.map(row => ({
+      label: row[groupBy],
+      value: parseInt(row.total_focos, 10)
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar focos de calor:', error);
+    return [];
+  }
 }
 
-export { fetchFocosDeCalor, getFocosPorEstadoBiomaParaPizza, getFocosPorRiscoEstadoParaPizza/* , getDadosFiltrados  */ }
+// Risco de Fogo (unindo todas as tabelas de satélite)
+async function getRiscoDeFogoPorGrupo(
+  groupBy: 'estado' | 'bioma',
+  startDate?: string,
+  endDate?: string
+): Promise<any[]> {
+  try {
+    let where = '';
+    const params: any[] = [];
+    if (startDate) {
+      params.push(startDate);
+      where += ` AND data >= $${params.length}`;
+    }
+    if (endDate) {
+      params.push(endDate);
+      where += ` AND data <= $${params.length}`;
+    }
+    const query = `
+      SELECT ${groupBy}, AVG(ABS(risco_fogo)) AS risco_medio FROM (
+        SELECT ${groupBy}, risco_fogo, data_hora_gmt as data FROM dados_satelite_2025
+        UNION ALL
+        SELECT ${groupBy}, risco_fogo, data_pas as data FROM dados_satelite_2024
+        UNION ALL
+        SELECT ${groupBy}, risco_fogo, data_pas as data FROM dados_satelite_2023
+      ) AS uniao
+      WHERE 1=1 ${where}
+      AND risco_fogo <= 1 AND risco_fogo >= -1
+      GROUP BY ${groupBy}
+      ORDER BY risco_medio DESC
+      LIMIT 10
+    `;
+    const result = await pool.query(query, params);
+    return result.rows.map(row => ({
+      label: row[groupBy],
+      value: Number(row.risco_medio)
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar risco de fogo:', error);
+    return [];
+  }
+}
+
+// Áreas Queimadas (usando apenas a tabela area_queimada)
+async function getAreasQueimadasPorGrupo(
+  groupBy: 'estado' | 'bioma',
+  startDate?: string,
+  endDate?: string
+): Promise<any[]> {
+  try {
+    let where = '';
+    const params: any[] = [];
+    if (startDate) {
+      params.push(startDate);
+      where += ` AND data_hora >= $${params.length}`;
+    }
+    if (endDate) {
+      params.push(endDate);
+      where += ` AND data_hora <= $${params.length}`;
+    }
+    const query = `
+      SELECT ${groupBy}, COUNT(*) AS total_queimadas
+      FROM area_queimada
+      WHERE 1=1 ${where}
+      GROUP BY ${groupBy}
+      ORDER BY total_queimadas DESC
+      LIMIT 10
+    `;
+    const result = await pool.query(query, params);
+    return result.rows.map(row => ({
+      label: row[groupBy],
+      value: Number(row.total_queimadas)
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar áreas queimadas:', error);
+    return [];
+  }
+}
+
+export {
+  getFocosDeCalorPorGrupo,
+  getRiscoDeFogoPorGrupo,
+  getAreasQueimadasPorGrupo
+}

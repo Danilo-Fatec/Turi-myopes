@@ -17,8 +17,8 @@ const BIOMAS = [
 
 const ESTADOS = [
   "Todos",
-  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
-  "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
+  "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
 ];
 
 const defaultColors = [
@@ -53,8 +53,6 @@ const Dados: React.FC = () => {
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
   const [region, setRegion] = useState<string>('')
-  const [chartLabels, setChartLabels] = useState<string[]>([])
-  const [chartData, setChartData] = useState<number[]>([])
   const [labels, setLabels] = useState<string[]>([])
   const [data, setData] = useState<number[]>([])
   const [loading, setLoading] = useState(false)
@@ -75,42 +73,47 @@ const Dados: React.FC = () => {
     return { labels, values: valoresEmPorcentagem };
   }
 
-  const fetchData = async (dataType: string, mapType: string) => {
+  const fetchData = async (dataType: string, mapType: string, region: string) => {
     try {
-      const response = await api.get(`/${dataType}-${mapType}`)
-      const data = response.data
-      console.log(data)
+      const params: any = {}
+      if (startDate) params.startDate = startDate
+      if (endDate) params.endDate = endDate
+      if (region && region !== "Todos") {
+        if (mapType === 'estado') params.estado = region
+        if (mapType === 'bioma') params.bioma = region
+      }
 
-      const labels = data.map((item: any) => item.estado || item.bioma)
-      const values = data.map((item: any) =>
-        dataType === 'focos'
-          ? Number(item.total_focos)
-          : dataType === 'risco'
-            ? Number(Math.abs(Number(item.risco_medio)))
-            : Number(Math.abs(Number(item.total_precipitacao)))
-      )
+      let url = '';
+      if (dataType === 'focos' && mapType === 'estado') url = '/focos-por-estado-pizza';
+      else if (dataType === 'focos' && mapType === 'bioma') url = '/focos-por-bioma-pizza';
+      else if (dataType === 'risco' && mapType === 'estado') url = '/risco-por-estado-pizza';
+      else if (dataType === 'risco' && mapType === 'bioma') url = '/risco-por-bioma-pizza';
+      else if (dataType === 'areas' && mapType === 'estado') url = '/areas-por-estado-pizza';
+      else if (dataType === 'areas' && mapType === 'bioma') url = '/areas-por-bioma-pizza';
+
+      if (!url) throw new Error('Combinação de tipo de dado e mapa não suportada!');
+
+      const response = await api.get(url, { params })
+      const data = response.data
+
+      const labels = data.map((item: any) => item.label || item.estado || item.bioma)
+      const values = data.map((item: any) => item.value ?? item.total_focos ?? item.risco_medio ?? item.total_queimadas)
       return { labels, values }
     } catch (error) {
+      console.error('Erro ao buscar dados:', error)
       return { labels: [], values: [] }
     }
   }
 
-  useEffect(() => {
-    const carregarDados = async () => {
-      setLoading(true)
-      const { labels, values } = await fetchData(dataType, mapType)
-      setChartLabels(labels)
-      setChartData(values)
-      setLoading(false)
-    }
-
-    carregarDados()
-  }, [dataType, mapType, region])
-
   const handleApplyFilters = async () => {
+    if (startDate && endDate && endDate < startDate) {
+      alert('A data final não pode ser menor que a data inicial!');
+      return;
+    }
     setLoading(true)
     try {
-      const { labels: fetchedLabels, values: fetchedValues } = await fetchData(dataType, mapType)
+      const { labels: fetchedLabels, values: fetchedValues } = await fetchData(dataType, mapType, region)
+      console.log('Labels e valores para o gráfico:', fetchedLabels, fetchedValues)
 
       let percentageLabels = fetchedLabels
       let percentageValues = fetchedValues
@@ -124,7 +127,7 @@ const Dados: React.FC = () => {
         isPercentage(false)
       }
 
-      
+
       let topLabels = percentageLabels;
       let topValues = percentageValues;
       if (percentageLabels.length > 10) {
@@ -133,15 +136,15 @@ const Dados: React.FC = () => {
         topValues = top.values;
       }
 
-      setLabels(topLabels || [])
-      setData(topValues || [])
+      setLabels(percentageLabels || [])
+      setData(percentageValues || [])
     } catch (error) {
     } finally {
       setLoading(false)
     }
   };
 
-  
+
   const referencias = labels.length > 0 ? labels : (mapType === 'bioma' ? BIOMAS : ESTADOS);
 
   return (
@@ -150,7 +153,7 @@ const Dados: React.FC = () => {
         <h2>Filtros</h2>
         <div className={styles.filters}>
           <div className={styles.filterGroup}>
-            <p>Tipo do mapa:</p>
+            <p>Divisão Regional:</p>
             <label>
               <input
                 type="radio"
@@ -213,6 +216,7 @@ const Dados: React.FC = () => {
               type="date"
               id="startDate"
               value={startDate}
+              max={endDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
@@ -223,6 +227,7 @@ const Dados: React.FC = () => {
               type="date"
               id="endDate"
               value={endDate}
+              min={startDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
@@ -234,7 +239,10 @@ const Dados: React.FC = () => {
               value={region}
               onChange={(e) => setRegion(e.target.value)}
             >
-              <option value="">Todos</option>
+              <option value="Todos">Todos</option>
+              {(mapType === 'estado' ? ESTADOS.slice(1) : BIOMAS.slice(1)).map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
             </select>
           </div>
 
@@ -286,7 +294,7 @@ const Dados: React.FC = () => {
             <ul>
               {labels.map((label, idx) => (
                 <li key={label}>
-                  <span style={{fontWeight: 600}}>{label}:</span> {data[idx]}
+                  <span style={{ fontWeight: 600 }}>{label}:</span> {data[idx]}
                 </li>
               ))}
             </ul>

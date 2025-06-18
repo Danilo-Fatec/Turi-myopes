@@ -1,4 +1,4 @@
-import { fetchFocosDeCalor } from './dataFetcher'
+/* import { fetchFocosDeCalor } from './dataFetcher'
 
 async function main() {
     try {
@@ -13,4 +13,4 @@ async function main() {
     }
 }
 
-main();
+main(); */

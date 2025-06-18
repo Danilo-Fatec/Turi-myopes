@@ -1,113 +1,136 @@
-import express, { Request, Response } from 'express'
-/* import { fetchFocosDeCalor, 
-    getFocosPorEstadoBiomaParaPizza, 
-    getFocosPorRiscoEstadoParaPizza } 
-    from './dataFetcher' */
+import express from 'express'
 import cors from 'cors'
-import pool from './db'
-import { getFocosDeCalorPorEstado, 
-    getFocosDeCalorPorBioma, 
-    getProgressoFocosDeCalorPorEstado, 
-    getProgressoFocosDeCalorPorBioma } 
-    from './dataFetcher/focosDeCalor'
-import { getRiscoDeFogoPorEstado, 
-    getRiscoDeFogoPorBioma } 
-    from './dataFetcher/riscoDeFogo'
-import { getAreasQueimadasPorEstado, 
-    getAreasQueimadasPorBioma } 
-    from './dataFetcher/areasQueimadas'
-import { getDadosDia } from './dataFetcher'
-
+import { 
+  getFocosDeCalorPorGrupo, 
+  getRiscoDeFogoPorGrupo, 
+  getAreasQueimadasPorGrupo 
+} from './dataFetcher'
+import { getAreasQueimadasPontos } from './dataFetcher/areasQueimadas'
+import { getRiscoDeFogoPontos } from './dataFetcher/riscoDeFogo'
+import { getFocosDeCalorPontos } from './dataFetcher/focosDeCalor'
 
 const app = express()
 const port = 3000
 
 app.use(cors())
 
-app.get('/focos-estado', async (req, res) => {
-  const data = await getFocosDeCalorPorEstado()
-  res.json(data)
+// Focos de Calor
+app.get('/focos-por-estado-pizza', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const data = await getFocosDeCalorPorGrupo('estado', startDate as string, endDate as string);
+    res.json(data);
+  } catch (error) {
+    console.error('Erro na rota /focos-por-estado-pizza:', error);
+    res.status(500).json({ error: 'Erro ao buscar dados' });
+  }
+});
+
+app.get('/focos-por-bioma-pizza', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const data = await getFocosDeCalorPorGrupo('bioma', startDate as string, endDate as string);
+    res.json(data);
+  } catch (error) {
+    console.error('Erro na rota /focos-por-bioma-pizza:', error);
+    res.status(500).json({ error: 'Erro ao buscar dados' });
+  }
+});
+
+// Risco de Fogo
+app.get('/risco-por-estado-pizza', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const data = await getRiscoDeFogoPorGrupo('estado', startDate as string, endDate as string);
+    res.json(data);
+  } catch (error) {
+    console.error('Erro na rota /risco-por-estado-pizza:', error);
+    res.status(500).json({ error: 'Erro ao buscar dados' });
+  }
+});
+
+app.get('/risco-por-bioma-pizza', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const data = await getRiscoDeFogoPorGrupo('bioma', startDate as string, endDate as string);
+    res.json(data);
+  } catch (error) {
+    console.error('Erro na rota /risco-por-bioma-pizza:', error);
+    res.status(500).json({ error: 'Erro ao buscar dados' });
+  }
+});
+
+// Áreas Queimadas
+app.get('/areas-por-estado-pizza', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const data = await getAreasQueimadasPorGrupo('estado', startDate as string, endDate as string);
+    res.json(data);
+  } catch (error) {
+    console.error('Erro na rota /areas-por-estado-pizza:', error);
+    res.status(500).json({ error: 'Erro ao buscar dados' });
+  }
+});
+
+app.get('/areas-por-bioma-pizza', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const data = await getAreasQueimadasPorGrupo('bioma', startDate as string, endDate as string);
+    res.json(data);
+  } catch (error) {
+    console.error('Erro na rota /areas-por-bioma-pizza:', error);
+    res.status(500).json({ error: 'Erro ao buscar dados' });
+  }
+});
+
+app.get('/focos-pontos', async (req, res) => {
+  try {
+    const { startDate, endDate, estado, bioma } = req.query;
+    const data = await getFocosDeCalorPontos(
+      startDate as string,
+      endDate as string,
+      estado as string,
+      bioma as string
+    );
+    res.json(data);
+  } catch (error) {
+    console.error('Erro na rota /focos-pontos:', error)
+    res.status(500).json({ error: 'Erro ao buscar pontos de focos de calor' })
+  }
 })
 
-app.get('/focos-bioma', async (req, res) => {
-  const data = await getFocosDeCalorPorBioma()
-  res.json(data)
-})
+app.get('/riscos-pontos', async (req, res) => {
+  try {
+    const { startDate, endDate, estado, bioma } = req.query;
+    const data = await getRiscoDeFogoPontos(
+      startDate as string,
+      endDate as string,
+      estado as string,
+      bioma as string
+    );
+    res.json(data)
+  } catch (error) {
+    console.error('Erro na rota /riscos-pontos:', error)
+    res.status(500).json({ error: 'Erro ao buscar pontos de risco de fogo' })
+  }
+});
 
-app.get('/risco-estado', async (req, res) => {
-  const data = await getRiscoDeFogoPorEstado()
-  res.json(data)
-})
-
-app.get('/risco-bioma', async (req, res) => {
-  const data = await getRiscoDeFogoPorBioma()
-  res.json(data)
-})
-
-app.get('/areas-estado', async (req, res) => {
-  const data = await getAreasQueimadasPorEstado()
-  res.json(data)
-})
-
-app.get('/areas-bioma', async (req, res) => {
-  const data = await getAreasQueimadasPorBioma()
-  res.json(data)
-})
-
-app.get('/dados-dia', async (req, res) => {
-  const { data } = req.query;
-  const result = await pool.query(`
-    SELECT id, lat, lon, estado, municipio, bioma, data_hora_gmt, risco_fogo, precipitacao, frp
-    FROM dados_satelite
-    WHERE data_hora_gmt::date = $1
-      AND lat IS NOT NULL AND lon IS NOT NULL
-  `, [data]);
-  res.json(result.rows);
+app.get('/queimadas-pontos', async (req, res) => {
+  try {
+    const { startDate, endDate, estado, bioma } = req.query;
+    const data = await getAreasQueimadasPontos(
+      startDate as string,
+      endDate as string,
+      estado as string,
+      bioma as string
+    );
+    res.json(data)
+  } catch (error) {
+    console.error('Erro na rota /queimadas-pontos:', error)
+    res.status(500).json({ error: 'Erro ao buscar pontos de áreas queimadas' })
+  }
 })
 
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });
-
-/* app.get('/dados-grafico', async (req, res) => {
-    const { mapType, dataType, startDate, endDate, region } = req.query;
-
-    try {
-        // Substitua pela lógica para buscar os dados filtrados no banco
-        const data = await getDadosFiltrados(mapType as string, dataType as string, startDate as string);
-        res.json(data);
-    } catch (error) {
-        console.error('Erro ao buscar dados do gráfico:', error);
-        res.status(500).json({ error: 'Erro ao buscar dados' });
-    }
-});
-
-app.get('/focos', async (req: Request, res: Response) => {
-    try {
-        const data = await fetchFocosDeCalor();
-        res.json(data);
-    } catch (error) {
-        console.error('Erro ao buscar dados:', error);
-        res.status(500).json({ error: 'Erro ao buscar dados do banco de dados' });
-    }
-});
- 
-app.get('/focos-por-risco-estado-pizza', async (req, res) => {
-    try {
-        const data = await getFocosPorRiscoEstadoParaPizza();
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar dados' });
-    }
-});
-
-app.get('/focos-por-estado-bioma-pizza', async (req, res) => {
-    try {
-        const data = await getFocosPorEstadoBiomaParaPizza();
-        console.log('Dados enviados para o frontend:', data);
-        res.json(data)
-    } catch (error) {
-        console.error('Erro ao buscar dados:', error);
-        res.status(500).json({ error: 'Erro ao buscar dados' });
-    }
-}); */
