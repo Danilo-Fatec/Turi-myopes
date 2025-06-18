@@ -232,20 +232,6 @@ const Dados: React.FC = () => {
             />
           </div>
 
-          <div className={styles.filterGroup}>
-            <label htmlFor="region">Estado / Bioma:</label>
-            <select
-              id="region"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-            >
-              <option value="Todos">Todos</option>
-              {(mapType === 'estado' ? ESTADOS.slice(1) : BIOMAS.slice(1)).map((item) => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-          </div>
-
           <button className={styles.applyButton} onClick={handleApplyFilters}>
             Aplicar Filtros
           </button>
