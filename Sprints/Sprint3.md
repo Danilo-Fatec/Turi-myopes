@@ -2,7 +2,7 @@
 |----------------------------------------------------------------|-----------|
 | UML de Sequência                                               | Concluido |
 | Ajudar membros com tarefas pendentes                           | Concluido |
-| Casos de testes                                                |  a Fazer  |
+| Casos de testes                                                | Concluido |
 | Foto da equipe para a tela "Quem somos nós"                    | Concluido |
 | Relatório Sprint 3                                             | Concluido |
 | Aprovar tarefas                                                | Concluido |  
